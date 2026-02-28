@@ -24,7 +24,11 @@ async function start() {
     // Start listening — bind 0.0.0.0 for cloud deployments (Render, etc.)
     server.listen(env.PORT, '0.0.0.0', () => {
       logger.info(`🚀 KRX Stock Backend running on port ${env.PORT} (${env.NODE_ENV})`);
-      logger.info(`📡 Health check: http://localhost:${env.PORT}/api/health`);
+      if (env.isProd) {
+        logger.info(`📡 Health check: /api/health`);
+      } else {
+        logger.info(`📡 Health check: http://localhost:${env.PORT}/api/health`);
+      }
     });
 
     // Phase 2A: Attach WebSocket server

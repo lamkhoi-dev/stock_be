@@ -49,6 +49,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// ─── Root route (Render default health check hits /) ─
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: 'krx-stock-backend' });
+});
+app.head('/', (req, res) => {
+  res.sendStatus(200);
+});
+
 // ─── Health Check ────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
