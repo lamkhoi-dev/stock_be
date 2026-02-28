@@ -115,7 +115,7 @@ const TTL = {
   RANKING: 60_000,      // 1min
   INVESTOR: 5 * 60_000, // 5min
   INDEX: 30_000,        // 30s
-  MARKET: 2 * 60_000,   // 2min
+  MARKET: 5 * 60_000,   // 5min – batch overview (slow on free tier)
 };
 
 // ─── Top Korean Stocks (for market overview) ─────────
@@ -639,38 +639,64 @@ const kisService = {
 
     await getToken();
 
-    const results = [];
-    for (const code of TOP_CODES) {
-      try {
-        await throttle();
-        const { data } = await axios.get(
-          `${env.KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
-          {
-            headers: headers('FHKST01010100'),
-            params: { FID_COND_MRKT_DIV_CODE: 'J', FID_INPUT_ISCD: code },
-            timeout: 6_000,
-          },
-        );
-        if (data.rt_cd === '0') {
-          const o = data.output;
-          results.push({
-            symbol: code,
-            name: STOCK_NAMES[code] || o.hts_kor_isnm || code,
-            price: safeInt(o.stck_prpr),
-            change: safeInt(o.prdy_vrss),
-            changePct: safeFloat(o.prdy_ctrt),
-            volume: safeInt(o.acml_vol),
-            dayHigh: safeInt(o.stck_hgpr),
-            dayLow: safeInt(o.stck_lwpr),
-            prevClose: safeInt(o.stck_sdpr),
-          });
+    // Fetch in 2 parallel batches of 4 to stay within KIS rate limits
+    const half = Math.ceil(TOP_CODES.length / 2);
+    const batch1 = TOP_CODES.slice(0, half);
+    const batch2 = TOP_CODES.slice(half);
+
+    async function fetchBatch(codes) {
+      const results = [];
+      for (const code of codes) {
+        try {
+          await throttle();
+          const { data } = await axios.get(
+            `${env.KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-price`,
+            {
+              headers: headers('FHKST01010100'),
+              params: { FID_COND_MRKT_DIV_CODE: 'J', FID_INPUT_ISCD: code },
+              timeout: 5_000,
+            },
+          );
+          if (data.rt_cd === '0') {
+            const o = data.output;
+            results.push({
+              symbol: code,
+              name: STOCK_NAMES[code] || o.hts_kor_isnm || code,
+              price: safeInt(o.stck_prpr),
+              change: safeInt(o.prdy_vrss),
+              changePct: safeFloat(o.prdy_ctrt),
+              volume: safeInt(o.acml_vol),
+              dayHigh: safeInt(o.stck_hgpr),
+              dayLow: safeInt(o.stck_lwpr),
+              prevClose: safeInt(o.stck_sdpr),
+            });
+          }
+        } catch {
+          // Skip failed individual stock
         }
-      } catch {
-        // Skip failed individual stock
       }
+      return results;
     }
 
-    cacheService.set(cacheKey, results);
+    // Overall 25s timeout to avoid Render 30s gateway timeout
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Market overview timeout')), 25_000),
+    );
+
+    let results;
+    try {
+      results = await Promise.race([
+        Promise.all([fetchBatch(batch1), fetchBatch(batch2)]).then(([a, b]) => [...a, ...b]),
+        timeoutPromise,
+      ]);
+    } catch {
+      // If timed out, return whatever we have from cache or empty
+      results = [];
+    }
+
+    if (results.length > 0) {
+      cacheService.set(cacheKey, results);
+    }
     return { data: results, cached: false };
   },
 };

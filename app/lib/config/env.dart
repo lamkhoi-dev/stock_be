@@ -24,10 +24,10 @@ class Env {
     defaultValue: 'wss://stock-be-sv3n.onrender.com/ws',
   );
 
-  // Timeouts (ms)
-  static const int connectTimeout = 8000;
-  static const int receiveTimeout = 15000;
-  static const int sendTimeout = 8000;
+  // Timeouts (ms) — generous for Render free-tier cold starts + KIS batch calls
+  static const int connectTimeout = 15000;
+  static const int receiveTimeout = 60000;
+  static const int sendTimeout = 15000;
 
   // WebSocket
   static const int wsReconnectDelay = 3000; // ms
