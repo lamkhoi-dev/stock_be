@@ -13,6 +13,7 @@ import {
   getTrades,
   getFluctuationRanking,
   getVolumeRanking,
+  getStockList,
   getInvestor,
   getIndex,
   getMarketOverview,
@@ -40,6 +41,9 @@ router.get('/index', optionalAuth, getIndex);
 // ─── Rankings ────────────────────────────────────────
 router.get('/ranking/fluctuation', optionalAuth, getFluctuationRanking);
 router.get('/ranking/volume', optionalAuth, getVolumeRanking);
+
+// ─── Stock List (merged rankings) ────────────────────
+router.get('/list', optionalAuth, getStockList);
 
 // ─── Stock Detail ────────────────────────────────────
 router.get('/price/:symbol', optionalAuth, getPrice);

@@ -149,6 +149,68 @@ export const getTrades = async (req, res, next) => {
 };
 
 // ═══════════════════════════════════════════════════════
+//  STOCK LIST (merged rankings)
+// ═══════════════════════════════════════════════════════
+
+/**
+ * GET /api/stocks/list
+ * Returns a comprehensive stock list by merging multiple KIS ranking results.
+ * Query: sort (change|volume), market (all|KOSPI|KOSDAQ)
+ */
+export const getStockList = async (req, res, next) => {
+  try {
+    const { sort = 'change', market = 'all' } = req.query;
+
+    // Try to fetch from multiple ranking endpoints to build a large list
+    const results = await Promise.allSettled([
+      kisService.getFluctuationRanking('1'),  // Gainers
+      kisService.getFluctuationRanking('3'),  // Losers
+      kisService.getVolumeRanking(),           // Volume leaders
+    ]);
+
+    // Merge & dedup by symbol
+    const stockMap = new Map();
+    for (const result of results) {
+      if (result.status === 'fulfilled') {
+        for (const stock of result.value.data) {
+          if (!stockMap.has(stock.symbol)) {
+            stockMap.set(stock.symbol, stock);
+          }
+        }
+      }
+    }
+
+    let stocks = Array.from(stockMap.values());
+
+    // Filter by market if requested
+    if (market === 'KOSPI') {
+      stocks = stocks.filter(s => !s.symbol.startsWith('4') && !s.symbol.startsWith('3'));
+    } else if (market === 'KOSDAQ') {
+      stocks = stocks.filter(s => s.symbol.startsWith('4') || s.symbol.startsWith('3'));
+    }
+
+    // Sort
+    if (sort === 'volume') {
+      stocks.sort((a, b) => (b.volume || 0) - (a.volume || 0));
+    } else if (sort === 'name') {
+      stocks.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else {
+      // Default: sort by absolute change %
+      stocks.sort((a, b) => Math.abs(b.changePct || 0) - Math.abs(a.changePct || 0));
+    }
+
+    res.json({
+      success: true,
+      data: stocks,
+      total: stocks.length,
+      source: 'kis',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
 //  RANKINGS
 // ═══════════════════════════════════════════════════════
 
