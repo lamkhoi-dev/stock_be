@@ -48,13 +48,29 @@ export async function register(req, res, next) {
       logger.error('Failed to send verification email:', err);
     });
 
+    // Auto-login: generate tokens so the client can proceed immediately
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+    user.refreshToken = refreshToken;
+    user.lastLoginAt = new Date();
+    await user.save();
+
     res.status(201).json({
       success: true,
-      message: 'Account created. Please check your email to verify your account.',
+      message: 'Account created successfully.',
       data: {
-        userId: user._id,
-        email: user.email,
-        name: user.name,
+        accessToken,
+        refreshToken,
+        user: {
+          id: user._id,
+          email: user.email,
+          name: user.name,
+          avatar: user.avatar,
+          subscription: user.subscription,
+          settings: user.settings,
+          role: user.role,
+          emailVerified: user.emailVerified,
+        },
       },
     });
   } catch (error) {
