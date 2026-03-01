@@ -167,7 +167,11 @@ class ApiClient {
             'period': period,
             if (startDate != null) 'startDate': startDate,
             if (endDate != null) 'endDate': endDate,
-          });
+          },
+          options: Options(
+            // Chart pagination can take 20-40s for long periods (5Y+Daily = 13 pages)
+            receiveTimeout: const Duration(seconds: 120),
+          ));
 
   Future<Response> getMinuteChart(String symbol,
           {String? time, int maxPages = 6}) =>

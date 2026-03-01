@@ -244,11 +244,10 @@ const kisService = {
     // Fetch pages by shifting endDate to oldest record - 1 day
     const allRecords = [];
     let currentEnd = end;
-    const maxPages = 10; // safety limit (10 × 100 = 1000 max records)
+    const maxPages = 15; // safety limit (15 × 100 = 1500 max records, covers 5Y daily)
 
     for (let page = 0; page < maxPages; page++) {
-      if (page > 0) await sleep(300); // throttle between pages
-
+      // throttle() inside fetchPage already handles KIS rate limit
       const records = await fetchPage(start, currentEnd);
       if (records.length === 0) break;
 

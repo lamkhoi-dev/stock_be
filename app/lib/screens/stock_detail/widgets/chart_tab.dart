@@ -29,6 +29,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
   // ──── Data ────────────────────────────────────────────────
   List<_CandleData> _candles = [];
   bool _isLoading = true;
+  String? _loadingHint;
   String? _error;
 
   // ──── Chart controls ──────────────────────────────────────
@@ -174,7 +175,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
       4 => [1, 2, 3],       // 6M: daily, weekly, monthly
       5 => [1, 2, 3],       // 1Y: daily, weekly, monthly
       6 => [1, 2, 3],       // 2Y: daily, weekly, monthly
-      _ => [2, 3],          // 5Y: weekly, monthly
+      _ => [1, 2, 3],       // 5Y: daily, weekly, monthly
     };
   }
 
@@ -186,13 +187,19 @@ class _ChartTabState extends ConsumerState<ChartTab>
     3 => 1,  // 3M → daily
     4 => 1,  // 6M → daily
     5 => 1,  // 1Y → daily
-    6 => 1,  // 2Y → daily (user can switch to weekly)
-    _ => 2,  // 5Y → weekly (user can switch to monthly)
+    6 => 1,  // 2Y → daily
+    _ => 2,  // 5Y → weekly (default, user can switch to daily)
   };
 
   Future<void> _loadChartData() async {
+    // Estimate if this will be a large fetch
+    final estCandles = _getMaxCandles();
+    final hint = estCandles > 200
+        ? 'Loading ~$estCandles candles...'
+        : null;
     setState(() {
       _isLoading = true;
+      _loadingHint = hint;
       _error = null;
     });
     try {
@@ -228,8 +235,11 @@ class _ChartTabState extends ConsumerState<ChartTab>
       }
 
       final maxC = _getMaxCandles();
-      if (rawData.length > maxC) {
-        rawData = rawData.sublist(rawData.length - maxC);
+      // Only truncate if backend returned significantly more than expected
+      // (e.g. extra data from cache overlap). Keep generous margin (+20%)
+      final truncateAt = (maxC * 1.2).ceil();
+      if (rawData.length > truncateAt) {
+        rawData = rawData.sublist(rawData.length - truncateAt);
       }
 
       _candles = rawData
@@ -500,7 +510,19 @@ class _ChartTabState extends ConsumerState<ChartTab>
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(60),
-          child: CircularProgressIndicator(color: cs.primary),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(color: cs.primary),
+              if (_loadingHint != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _loadingHint!,
+                  style: TextStyle(color: cs.secondary, fontSize: 12),
+                ),
+              ],
+            ],
+          ),
         ),
       );
     }
