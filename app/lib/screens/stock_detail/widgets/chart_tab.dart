@@ -144,16 +144,16 @@ class _ChartTabState extends ConsumerState<ChartTab>
   int _getMaxCandles() {
     if (_candleInterval == 0) return 78; // minute
 
-    // Approximate trading days per period
+    // Approximate trading days per period (generous to not truncate real data)
     final tradingDays = switch (_selectedPeriod) {
       0 => 1,
       1 => 5,
       2 => 23,
       3 => 66,
-      4 => 132,
-      5 => 253,
-      6 => 505,
-      _ => 1260,
+      4 => 135,
+      5 => 260,
+      6 => 520,
+      _ => 1300,
     };
 
     // Divide by candle interval to get expected count
