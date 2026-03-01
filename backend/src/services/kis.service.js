@@ -212,31 +212,76 @@ const kisService = {
     const cached = cacheService.get(cacheKey, TTL.DAILY);
     if (cached) return { ...cached, cached: true };
 
-    await getToken();
-    await throttle();
+    // ── Helper: fetch one page of OHLCV data ──
+    const fetchPage = async (pageStart, pageEnd) => {
+      await getToken();
+      await throttle();
 
-    const { data } = await axios.get(
-      `${env.KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice`,
-      {
-        headers: headers('FHKST03010100'),
-        params: {
-          FID_COND_MRKT_DIV_CODE: 'J',
-          FID_INPUT_ISCD: code,
-          FID_INPUT_DATE_1: start,
-          FID_INPUT_DATE_2: end,
-          FID_PERIOD_DIV_CODE: periodType,
-          FID_ORG_ADJ_PRC: '0', // 0 = 수정주가 반영
+      const { data } = await axios.get(
+        `${env.KIS_BASE_URL}/uapi/domestic-stock/v1/quotations/inquire-daily-itemchartprice`,
+        {
+          headers: headers('FHKST03010100'),
+          params: {
+            FID_COND_MRKT_DIV_CODE: 'J',
+            FID_INPUT_ISCD: code,
+            FID_INPUT_DATE_1: pageStart,
+            FID_INPUT_DATE_2: pageEnd,
+            FID_PERIOD_DIV_CODE: periodType,
+            FID_ORG_ADJ_PRC: '0', // 0 = 수정주가 반영
+          },
+          timeout: 10_000,
         },
-        timeout: 10_000,
-      },
-    );
+      );
 
-    if (data.rt_cd !== '0') throw new Error(data.msg1 || 'KIS chart API error');
+      if (data.rt_cd !== '0') throw new Error(data.msg1 || 'KIS chart API error');
 
-    // output2 = array newest→oldest → reverse for chart
-    const history = (data.output2 || [])
-      .filter((o) => o.stck_bsop_date)
-      .reverse()
+      // output2 = array newest→oldest
+      const records = (data.output2 || []).filter((o) => o.stck_bsop_date);
+      return records;
+    };
+
+    // ── Paginate: KIS returns max ~100 per call ──
+    // Fetch pages by shifting endDate to oldest record - 1 day
+    const allRecords = [];
+    let currentEnd = end;
+    const maxPages = 10; // safety limit (10 × 100 = 1000 max records)
+
+    for (let page = 0; page < maxPages; page++) {
+      if (page > 0) await sleep(300); // throttle between pages
+
+      const records = await fetchPage(start, currentEnd);
+      if (records.length === 0) break;
+
+      allRecords.push(...records);
+
+      // If we got less than 100, no more pages needed
+      if (records.length < 100) break;
+
+      // Get oldest date from this batch (last element = oldest since newest→oldest)
+      const oldestDate = records[records.length - 1].stck_bsop_date;
+
+      // If oldest is at or before start, we have everything
+      if (oldestDate <= start) break;
+
+      // Set endDate to day before oldest for next page
+      const oldestMs = new Date(
+        `${oldestDate.substring(0, 4)}-${oldestDate.substring(4, 6)}-${oldestDate.substring(6, 8)}`,
+      ).getTime();
+      currentEnd = formatDateKIS(new Date(oldestMs - 86_400_000));
+
+      // If next endDate is before start, stop
+      if (currentEnd < start) break;
+    }
+
+    // Dedupe by date (pages may overlap at boundary), reverse for chronological order
+    const seen = new Set();
+    const history = allRecords
+      .filter((o) => {
+        if (seen.has(o.stck_bsop_date)) return false;
+        seen.add(o.stck_bsop_date);
+        return true;
+      })
+      .reverse() // oldest→newest for chart
       .map((o) => ({
         time: `${o.stck_bsop_date.substring(0, 4)}-${o.stck_bsop_date.substring(4, 6)}-${o.stck_bsop_date.substring(6, 8)}`,
         open: safeInt(o.stck_oprc),

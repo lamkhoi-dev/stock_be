@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KRX All Stocks List</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#3B82F6", // Accent #3B82F6
+                        "background-light": "#f5f7f8",
+                        "background-dark": "#0B0D17", // Dark mode #0B0D17
+                        "surface-dark": "#141620", // Surface #141620
+                        "gain": "#22C55E", // Gain #22C55E
+                        "loss": "#EF4444", // Loss #EF4444
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "1rem", "lg": "2rem", "xl": "3rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar hiding for clean UI */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen flex flex-col">
+<!-- Top Bar: Back, Search, Filter -->
+<header class="sticky top-0 z-50 bg-surface-dark/95 backdrop-blur-md border-b border-slate-800 px-4 py-3">
+<div class="flex items-center gap-3">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="flex-1 relative">
+<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-slate-500 text-[20px]">search</span>
+</div>
+<input class="block w-full pl-10 pr-3 py-2.5 rounded-xl border-none bg-slate-800/50 text-white placeholder-slate-500 focus:ring-2 focus:ring-primary focus:bg-slate-800 text-sm leading-6" placeholder="Search stocks..." type="text"/>
+</div>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+<!-- Filter Row & Sort -->
+<div class="flex items-center justify-between mt-4">
+<div class="flex gap-2 overflow-x-auto no-scrollbar">
+<button class="px-4 py-1.5 rounded-full bg-primary text-white text-xs font-semibold whitespace-nowrap shadow-lg shadow-primary/20">All</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-800 text-slate-400 text-xs font-medium hover:bg-slate-700 whitespace-nowrap transition-colors">KOSPI</button>
+<button class="px-4 py-1.5 rounded-full bg-slate-800 text-slate-400 text-xs font-medium hover:bg-slate-700 whitespace-nowrap transition-colors">KOSDAQ</button>
+</div>
+<button class="flex items-center gap-1 text-xs text-slate-400 font-medium whitespace-nowrap pl-4">
+                Sort: Change % 
+                <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+</button>
+</div>
+</header>
+<!-- Main Content: Stock List -->
+<main class="flex-1 px-4 py-2 pb-24 overflow-y-auto">
+<div class="flex flex-col gap-1">
+<!-- Samsung Electronics -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-blue-900/40 text-blue-400 flex items-center justify-center text-sm font-bold border border-blue-500/20 shrink-0">
+                        S
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">삼성전자 Samsung</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">005930</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="hidden sm:flex w-20 h-8 items-center justify-center mx-2">
+<svg class="w-full h-full stroke-gain fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 80 24">
+<path d="M0,20 C10,18 20,22 30,10 C40,5 50,12 60,8 C70,4 80,0 80,0" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩72,800</p>
+<p class="text-gain text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_up</span>
+                        1.25%
+                    </p>
+</div>
+</div>
+<!-- SK Hynix -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-orange-900/40 text-orange-400 flex items-center justify-center text-sm font-bold border border-orange-500/20 shrink-0">
+                        SK
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">SK하이닉스 SK Hynix</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">000660</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart (Mobile hidden if too small, but user asked for it in phone factor, so using simpler svg) -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-loss fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,5 C10,5 20,12 30,15 C40,20 50,18 64,22" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩132,500</p>
+<p class="text-loss text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_down</span>
+                        0.82%
+                    </p>
+</div>
+</div>
+<!-- NAVER -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-green-900/40 text-green-400 flex items-center justify-center text-sm font-bold border border-green-500/20 shrink-0">
+                        N
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">NAVER</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">035420</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-gain fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,20 C10,18 20,15 30,10 C40,12 50,8 64,2" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩204,500</p>
+<p class="text-gain text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_up</span>
+                        2.15%
+                    </p>
+</div>
+</div>
+<!-- Kakao -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-yellow-900/40 text-yellow-400 flex items-center justify-center text-sm font-bold border border-yellow-500/20 shrink-0">
+                        K
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">카카오 Kakao</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">035720</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-loss fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,10 C10,8 20,12 30,18 C40,20 50,22 64,24" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩57,400</p>
+<p class="text-loss text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_down</span>
+                        0.61%
+                    </p>
+</div>
+</div>
+<!-- LG Energy Solution -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-pink-900/40 text-pink-400 flex items-center justify-center text-sm font-bold border border-pink-500/20 shrink-0">
+                        L
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">LG에너지솔루션</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">373220</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-gain fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,22 C10,20 20,15 30,15 C40,12 50,5 64,2" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩412,500</p>
+<p class="text-gain text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_up</span>
+                        0.32%
+                    </p>
+</div>
+</div>
+<!-- ECOPRO BM -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-teal-900/40 text-teal-400 flex items-center justify-center text-sm font-bold border border-teal-500/20 shrink-0">
+                        E
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">에코프로비엠 Ecopro</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSDAQ</span>
+<span class="text-xs text-slate-500 truncate">247540</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-loss fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,12 C10,12 20,15 30,20 C40,22 50,18 64,22" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩245,000</p>
+<p class="text-loss text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_down</span>
+                        1.80%
+                    </p>
+</div>
+</div>
+<!-- POSCO Holdings -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-slate-800 text-slate-300 flex items-center justify-center text-sm font-bold border border-slate-600/30 shrink-0">
+                        P
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">POSCO홀딩스</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">005490</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-gain fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,22 C10,22 20,18 30,12 C40,10 50,8 64,2" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩465,500</p>
+<p class="text-gain text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_up</span>
+                        0.95%
+                    </p>
+</div>
+</div>
+<!-- Celltrion -->
+<div class="group flex items-center justify-between py-3 border-b border-slate-800/50 hover:bg-slate-800/30 -mx-4 px-4 transition-colors cursor-pointer">
+<div class="flex items-center gap-3 flex-1 min-w-0">
+<div class="w-10 h-10 rounded-full bg-purple-900/40 text-purple-400 flex items-center justify-center text-sm font-bold border border-purple-500/20 shrink-0">
+                        C
+                    </div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<h3 class="text-white text-sm font-semibold truncate">셀트리온 Celltrion</h3>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="px-1.5 py-0.5 rounded-[4px] bg-slate-800 text-[10px] font-bold text-slate-400 border border-slate-700">KOSPI</span>
+<span class="text-xs text-slate-500 truncate">068270</span>
+</div>
+</div>
+</div>
+<!-- Mini Chart -->
+<div class="w-16 h-8 flex items-center justify-center mx-2 opacity-80">
+<svg class="w-full h-full stroke-gain fill-none stroke-2" preserveaspectratio="none" viewbox="0 0 64 24">
+<path d="M0,15 C15,15 25,18 35,12 C45,8 55,5 64,3" vector-effect="non-scaling-stroke"></path>
+</svg>
+</div>
+<div class="text-right shrink-0 min-w-[80px]">
+<p class="text-white text-sm font-bold tracking-tight">₩178,800</p>
+<p class="text-gain text-xs font-medium flex items-center justify-end gap-0.5">
+<span class="material-symbols-outlined text-[12px]">arrow_drop_up</span>
+                        3.21%
+                    </p>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 z-50 bg-surface-dark/95 backdrop-blur-md border-t border-slate-800 pb-safe">
+<div class="flex justify-around items-center px-2 py-3">
+<a class="flex flex-col items-center gap-1 min-w-[64px] group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[24px]">home</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 min-w-[64px] group" href="#">
+<span class="material-symbols-outlined text-white text-[24px]">show_chart</span>
+<span class="text-[10px] font-medium text-white">Stocks</span>
+</a>
+<a class="flex flex-col items-center gap-1 min-w-[64px] group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[24px]">pie_chart</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors">Portfolio</span>
+</a>
+<a class="flex flex-col items-center gap-1 min-w-[64px] group" href="#">
+<span class="material-symbols-outlined text-slate-400 group-hover:text-primary transition-colors text-[24px]">menu</span>
+<span class="text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors">Menu</span>
+</a>
+</div>
+<!-- Safe area spacer for iOS home indicator -->
+<div class="h-4 w-full"></div>
+</nav>
+</body></html>

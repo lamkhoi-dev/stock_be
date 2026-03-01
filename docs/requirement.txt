@@ -1,0 +1,38 @@
+        APP PHÂN TÍCH CHỨNG KHOÁN
+I. TỔNG QUAN
+Dự án bao gồm App Client và Web Admin, phục vụ phân tích chứng khoán thị trường Hàn Quốc (KRX), với hai chế độ Free và Pro (AI).
+II. PHẠM VI CHỨC NĂNG APP CLIENT
+1. XÁC THỰC & TÀI KHOẢN NGƯỜI DÙNG
+1.1 Màn hình Đăng ký / Đăng nhập
+1.2 Màn hình Quản lý thông tin cá nhân
+
+2. DANH SÁCH CỔ PHIẾU (STOCK LIST)
+2.1 Màn hình xem danh sách các mã cổ phiếu
+2.2 Màn hình tìm kiếm cổ phiếu
+
+3. QUẢN LÝ WATCHLIST
+3.1 Lưu / bỏ lưu cổ phiếu
+3.2 Màn hình quản lý mã đã lưu
+
+4. CHI TIẾT CỔ PHIẾU (STOCK DETAIL)
+4.1 Thông tin cơ bản cổ phiếu
+4.2 Biểu đồ giá (Chart)
+
+5. PHÂN TÍCH AI
+5.1 Phân tích AI cho cổ phiếu ( thường và pro )
+III. PHẠM VI CHỨC NĂNG WEB ADMIN
+1. QUẢN LÝ NGƯỜI DÙNG
+1.1 Danh sách người dùng
+1.2 Chi tiết người dùng
+1.3 Hành động: Block / Unblock user, bật tắt tính năng
+
+2. CẤU HÌNH HỆ THỐNG
+2.1 Bật / tắt các tính năng trên APP Client
+
+3. LOG & GIÁM SÁT
+- Log lỗi backend (7–14 ngày gần nhất)
+- Export dữ liệu CSV
+IV. DATA & CÔNG NGHỆ
+- Sử dụng Korea Investment Open API
+- Hỗ trợ dữ liệu realtime qua WebSocket
+- Phân tích AI dùng Google Gemini / OpenAI (tính phí theo lượt)

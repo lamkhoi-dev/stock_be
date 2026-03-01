@@ -1,0 +1,141 @@
+
+
+  
+
+
+
+Fetched 4 resources
+
+
+
+Fetched 4 resources
+
+Summarized conversation history
+
+
+
+Fetched 3 resources
+
+Now I have comprehensive data. Here's the full comparison of all viable options for Korean stock data accessible internationally:
+
+---
+
+## Tổng hợp tất cả nguồn dữ liệu cổ phiếu Hàn Quốc (KRX) - Truy cập quốc tế
+
+### 1. Yahoo Finance (`yahoo-finance2` npm)
+| Tiêu chí | Chi tiết |
+|---|---|
+| **Giá** | **Miễn phí** |
+| **KRX Support** | KOSPI (`.KS`), KOSDAQ (`.KQ`) |
+| **Dữ liệu** | OHLCV, realtime quotes, historical, search, screener, WebSocket |
+| **Rate Limit** | ~2,000 req/hr (an toàn) |
+| **Đăng ký** | Không cần API key |
+| **Ngôn ngữ** | npm package → dùng trực tiếp trong Node.js |
+| **Nhược điểm** | API không chính thức, có thể thay đổi bất ngờ; ToS chỉ cho personal use |
+| **Đánh giá** | **Tốt nhất cho primary data source miễn phí** |
+
+### 2. PyKRX (Python scraping library)
+| Tiêu chí | Chi tiết |
+|---|---|
+| **Giá** | **Miễn phí** (open source, 21k+ stars trên GitHub) |
+| **KRX Support** | **Rất toàn diện** — KOSPI/KOSDAQ/KONEX |
+| **Dữ liệu** | OHLCV, PER/PBR/EPS/DIV, market cap, short selling, foreign ownership, investor trading (기관/외국인/개인), index data, ETF/ETN/ELW, bonds, corporate info |
+| **Rate Limit** | Phụ thuộc KRX server (~1 req/sec khuyến nghị) |
+| **Đăng ký** | Không cần |
+| **Ngôn ngữ** | **Python only** → cần microservice Python hoặc child process |
+| **Nhược điểm** | Scraping (có thể bị block), Python only (backend Node.js), không có realtime |
+| **Đánh giá** | **Dữ liệu KRX phong phú nhất**, nhưng cần thêm Python layer |
+
+### 3. Alpha Vantage
+| Tiêu chí | Chi tiết |
+|---|---|
+| **Giá** | Free: **25 req/ngày**; Premium: $49.99/tháng (75 req/phút) |
+| **KRX Support** | Có (thêm suffix `.KRX`) |
+| **Dữ liệu** | OHLCV, 50+ technical indicators, search |
+| **Rate Limit** | Free: 25/ngày (rất ít); Paid: 75/phút |
+| **Đăng ký** | API key miễn phí |
+| **Ngôn ngữ** | REST API → dùng Axios trong Node.js |
+| **Nhược điểm** | Free tier quá ít; không có realtime trên free |
+| **Đánh giá** | **Tốt cho technical indicators bổ sung**, free tier quá hạn chế làm primary |
+
+### 4. Twelve Data
+| Tiêu chí | Chi tiết |
+|---|---|
+| **Giá** | Free: 8 credits/phút (800/ngày) — **CHỈ US/Forex/Crypto**; KRX cần **Pro: $229/tháng** |
+| **KRX Support** | XKRX (KOSPI), XKOS (KOSDAQ), XKON (KONEX) — **EOD only** |
+| **Dữ liệu** | OHLCV, technical indicators, WebSocket, fundamentals (paid) |
+| **Đăng ký** | API key miễn phí, nhưng KRX locked behind Pro |
+| **Ngôn ngữ** | REST API + WebSocket |
+| **Nhược điểm** | **$229/tháng cho Korean data** — quá đắt |
+| **Đánh giá** | Chất lượng cao nhưng **không khả thi về giá** cho project này |
+
+### 5. Marketstack
+| Tiêu chí | Chi tiết |
+|---|---|
+| **Giá** | Free: 100 req/tháng; Basic: $9.99/tháng (10,000 req); Pro: $49.99/tháng (100,000 req) |
+| **KRX Support** | Hỗ trợ 70+ exchanges, 50+ countries (MIC: XKRX). Cần verify KRX cụ thể |
+| **Dữ liệu** | EOD, intraday (paid), splits, dividends, tickers, exchanges |
+| **Rate Limit** | 5 req/giây |
+| **Đăng ký** | API key miễn phí |
+| **Ngôn ngữ** | REST API |
+| **Nhược điểm** | Free chỉ 100 req/tháng; intraday cần Professional ($49.99) |
+| **Đánh giá** | Giá hợp lý nếu cần official API, nhưng free tier quá ít |
+
+### 6. KRX Open API
+| Tiêu chí | Chi tiết |
+|---|---|
+| **Giá** | **Miễn phí** |
+| **KRX Support** | Trực tiếp từ KRX — historical daily OHLCV |
+| **Dữ liệu** | Chỉ historical daily data |
+| **Đăng ký** | Cần đăng ký tại openapi.krx.co.kr (có thể từ nước ngoài) |
+| **Ngôn ngữ** | REST API |
+| **Nhược điểm** | Chỉ historical, không realtime, không WebSocket, giao diện Hàn Quốc |
+| **Đánh giá** | **Bổ sung tốt** cho historical data chính thức |
+
+### 7. Tiingo
+| Tiêu chí | Chi tiết |
+|---|---|
+| **KRX Support** | **KHÔNG** — chỉ US (IEX), Crypto, Forex |
+| **Đánh giá** | **Không phù hợp** |
+
+### 8. Polygon.io (nay là Massive)
+| Tiêu chí | Chi tiết |
+|---|---|
+| **KRX Support** | Chủ yếu US market |
+| **Đánh giá** | **Không phù hợp** cho Korean stocks |
+
+---
+
+## Bảng so sánh nhanh
+
+| Nguồn | Giá KRX | Realtime | Historical | Indicators | Node.js native | Đánh giá |
+|---|---|---|---|---|---|---|
+| **Yahoo Finance** | Free | Có | Có | Không | **Có** (npm) | ⭐⭐⭐⭐⭐ |
+| **PyKRX** | Free | Không | **Rất đầy đủ** | Không | Không (Python) | ⭐⭐⭐⭐ |
+| **Alpha Vantage** | Free (25/ngày) | Không | Có | **50+** | Có (REST) | ⭐⭐⭐ |
+| **KRX Open API** | Free | Không | Có | Không | Có (REST) | ⭐⭐⭐ |
+| **Marketstack** | $9.99+/tháng | Paid only | Có | Không | Có (REST) | ⭐⭐ |
+| **Twelve Data** | **$229/tháng** | EOD only | Có | Có | Có (REST) | ⭐ (giá) |
+
+---
+
+## Khuyến nghị chiến lược (3 combo khả thi)
+
+**Combo A — 100% Miễn phí:**
+- **Yahoo Finance** (primary: quotes, OHLCV, search, realtime)
+- **Alpha Vantage** (supplementary: technical indicators — RSI, MACD, Bollinger...)
+- **KRX Open API** (backup: historical official data)
+
+**Combo B — Miễn phí + Python microservice:**
+- **Yahoo Finance** (primary: realtime, search)
+- **PyKRX** qua Python microservice (historical đầy đủ: fundamentals, short selling, foreign ownership, investor flow)
+- Cần thêm 1 file Python chạy Flask/FastAPI, Node.js gọi qua HTTP
+
+**Combo C — Có trả phí:**
+- **Yahoo Finance** (realtime)
+- **Marketstack Basic** $9.99/tháng (10,000 req/tháng, official EOD)
+- **Alpha Vantage** (technical indicators)
+
+---
+
+Bạn muốn chọn combo nào, hoặc mix theo cách khác?

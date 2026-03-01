@@ -1,0 +1,17 @@
+{
+  "name": "korean-stock-api-test",
+  "version": "1.0.0",
+  "description": "Test dashboard for Korean stock APIs: Yahoo Finance, Alpha Vantage, KRX Open API",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "axios": "^1.7.0",
+    "dotenv": "^16.4.0",
+    "cors": "^2.8.5"
+  }
+}

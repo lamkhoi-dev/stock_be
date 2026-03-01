@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +31,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   bool _isLoadingNews = true;
   bool _isLoadingWatchlist = true;
 
+  // Auto-retry for backend cold start (Render wakes up in ~15-30s)
+  int _retryCount = 0;
+  static const int _maxRetries = 6;
+  static const List<int> _retryDelaysSeconds = [5, 5, 8, 8, 10, 15];
+  Timer? _retryTimer;
+  bool _isRetrying = false;
+
   // Live data holders
   List<Map<String, dynamic>> _marketStocks = [];
   List<Map<String, dynamic>> _watchlistItems = [];
@@ -46,25 +55,100 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _retryTimer?.cancel();
+    super.dispose();
+  }
+
+  /// Check if most data sections are still empty (server probably not up yet)
+  bool get _hasNoData =>
+      _marketStocks.isEmpty &&
+      _gainers.isEmpty &&
+      _losers.isEmpty &&
+      _kospiValue == null;
+
+  /// Schedule auto-retry for empty sections after backend cold start
+  void _scheduleRetryIfNeeded() {
+    if (!mounted) return;
+    if (_retryCount >= _maxRetries) {
+      if (mounted) setState(() => _isRetrying = false);
+      return;
+    }
+    if (!_hasNoData) {
+      // We got some data — stop retrying
+      if (mounted) setState(() => _isRetrying = false);
+      return;
+    }
+
+    final delay = _retryDelaysSeconds[_retryCount.clamp(0, _retryDelaysSeconds.length - 1)];
+    _retryTimer?.cancel();
+    if (mounted) setState(() => _isRetrying = true);
+    _retryTimer = Timer(Duration(seconds: delay), () {
+      if (!mounted) return;
+      _retryCount++;
+      _retryEmptySections();
+    });
+  }
+
+  /// Retry ONLY the sections that are still empty (don't re-fetch successful ones)
+  Future<void> _retryEmptySections() async {
+    if (!mounted) return;
+    final api = ref.read(apiClientProvider);
+    final futures = <Future>[];
+
+    if (_kospiValue == null) {
+      if (mounted) setState(() => _isLoadingIndices = true);
+      futures.add(_fetchIndices(api));
+    }
+    if (_gainers.isEmpty && _losers.isEmpty) {
+      if (mounted) setState(() => _isLoadingMovers = true);
+      futures.add(_fetchTopMovers(api));
+    }
+    if (_news.isEmpty) {
+      if (mounted) setState(() => _isLoadingNews = true);
+      futures.add(_fetchNews(api));
+    }
+    if (_watchlistItems.isEmpty && ref.read(authProvider).isAuthenticated) {
+      if (mounted) setState(() => _isLoadingWatchlist = true);
+      futures.add(_fetchWatchlist(api));
+    }
+    if (_marketStocks.isEmpty) {
+      if (mounted) setState(() => _isLoadingMarket = true);
+      futures.add(_fetchMarketOverview(api));
+    }
+
+    await Future.wait(futures);
+    _scheduleRetryIfNeeded();
+  }
+
   Future<void> _loadData() async {
     if (!mounted) return;
+    _retryCount = 0;
+    _retryTimer?.cancel();
     setState(() {
       _isLoadingMarket = true;
       _isLoadingIndices = true;
       _isLoadingMovers = true;
       _isLoadingNews = true;
       _isLoadingWatchlist = true;
+      _isRetrying = false;
     });
 
     final api = ref.read(apiClientProvider);
 
     // Fire all fetches in parallel — each one calls setState independently
-    _fetchIndices(api);
-    _fetchTopMovers(api);
-    _fetchNews(api);
-    _fetchWatchlist(api);
-    // Market overview last (slowest — batch KIS calls)
-    _fetchMarketOverview(api);
+    final futures = <Future>[
+      _fetchIndices(api),
+      _fetchTopMovers(api),
+      _fetchNews(api),
+      _fetchWatchlist(api),
+      _fetchMarketOverview(api),
+    ];
+    await Future.wait(futures);
+
+    // After initial load, if most data is empty, backend may be cold-starting
+    _scheduleRetryIfNeeded();
   }
 
   Future<void> _fetchMarketOverview(ApiClient api) async {
@@ -249,6 +333,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _handleRefresh() async {
+    _retryCount = 0;
+    _retryTimer?.cancel();
+    if (mounted) setState(() => _isRetrying = false);
     final api = ref.read(apiClientProvider);
     // Fire all independently and wait for the fast ones
     await Future.wait([
@@ -263,10 +350,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.invalidate(marketOverviewProvider);
     ref.invalidate(topGainersProvider);
     ref.invalidate(topLosersProvider);
+
+    // Auto-retry if still empty
+    _scheduleRetryIfNeeded();
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final authState = ref.watch(authProvider);
 
     return Scaffold(
@@ -277,8 +368,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
+                gradient: LinearGradient(
+                  colors: [colorScheme.primary, colorScheme.primary],
                 ),
                 borderRadius: BorderRadius.circular(8),
               ),
@@ -335,13 +426,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: RefreshIndicator(
         onRefresh: _handleRefresh,
-        color: const Color(0xFF3B82F6),
-        backgroundColor: const Color(0xFF141620),
+        color: colorScheme.primary,
+        backgroundColor: colorScheme.surface,
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // Server warming-up banner (auto-retry active)
+              if (_isRetrying && _hasNoData)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  color: colorScheme.primary.withValues(alpha: 0.12),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Connecting to server... Retrying in a moment',
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 8),
               // Section A: Market Status
               MarketStatusWidget(

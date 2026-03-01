@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Samsung Stock Detail View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#3B82F6",
+                        "background-dark": "#0B0D17",
+                        "surface-dark": "#141620",
+                        "accent-green": "#22C55E",
+                        "accent-red": "#EF4444",
+                        "text-secondary": "#9CA3AF"
+                    },
+                    fontFamily: {
+                        display: ["Inter", "sans-serif"],
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }.chart-cursor {
+            cursor: crosshair;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-dark text-slate-100 font-display min-h-screen flex flex-col antialiased selection:bg-primary/30">
+<header class="sticky top-0 z-50 bg-background-dark/95 backdrop-blur-md border-b border-slate-800">
+<div class="px-4 py-3 flex items-center justify-between">
+<button class="w-10 h-10 -ml-2 flex items-center justify-center rounded-full hover:bg-surface-dark text-slate-300">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<div class="text-base font-bold text-white tracking-wide">005930.KS</div>
+<div class="flex items-center gap-1 -mr-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-dark text-yellow-400">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-dark text-slate-300">
+<span class="material-symbols-outlined">ios_share</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-dark text-slate-300">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</div>
+<div class="px-4 pb-4">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-5 h-5 rounded-full overflow-hidden border border-slate-700 bg-white flex items-center justify-center relative">
+<div class="absolute inset-0 bg-white">
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-gradient-to-b from-[#CD2E3A] to-[#0047A0]"></div>
+</div>
+<div class="absolute top-0 left-0 w-1.5 h-0.5 bg-black rotate-45 translate-x-0.5 translate-y-1"></div>
+<div class="absolute bottom-0 right-0 w-1.5 h-0.5 bg-black rotate-45 -translate-x-0.5 -translate-y-1"></div>
+</div>
+</div>
+<span class="text-xs font-bold text-slate-400">KRW</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700">KOSPI</span>
+</div>
+<h1 class="text-xl font-bold text-white leading-tight">삼성전자 <span class="text-slate-400 font-normal text-lg">Samsung Electronics</span></h1>
+<div class="flex items-baseline gap-3 mt-1">
+<span class="text-3xl font-bold text-accent-green tracking-tight">₩57,400</span>
+<span class="text-sm font-medium text-accent-green flex items-center gap-0.5">
+<span class="material-symbols-outlined text-sm">arrow_drop_up</span>
+                        350 (+0.61%)
+                    </span>
+</div>
+<div class="text-[11px] text-slate-500 mt-0.5">Aug 24, 15:30:00 KST · Market Closed</div>
+</div>
+</div>
+<div class="flex px-4 border-b border-slate-800 overflow-x-auto no-scrollbar gap-6">
+<button class="pb-3 border-b-2 border-primary text-primary font-semibold text-sm whitespace-nowrap">Chart</button>
+<button class="pb-3 border-b-2 border-transparent text-slate-400 font-medium text-sm whitespace-nowrap hover:text-white transition-colors">Info</button>
+<button class="pb-3 border-b-2 border-transparent text-slate-400 font-medium text-sm whitespace-nowrap hover:text-white transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm text-purple-400">spark</span>
+                AI Analysis
+            </button>
+<button class="pb-3 border-b-2 border-transparent text-slate-400 font-medium text-sm whitespace-nowrap hover:text-white transition-colors">News</button>
+<button class="pb-3 border-b-2 border-transparent text-slate-400 font-medium text-sm whitespace-nowrap hover:text-white transition-colors">Financials</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-6">
+<div class="px-4 py-3 flex items-center justify-between border-b border-slate-800/50">
+<div class="flex gap-1 bg-surface-dark p-0.5 rounded-lg border border-slate-800">
+<button class="px-3 py-1 text-xs font-medium rounded text-slate-400 hover:text-white">1D</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-slate-400 hover:text-white">1W</button>
+<button class="px-3 py-1 text-xs font-medium rounded bg-slate-700 text-white shadow-sm">1M</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-slate-400 hover:text-white">3M</button>
+<button class="px-3 py-1 text-xs font-medium rounded text-slate-400 hover:text-white">1Y</button>
+</div>
+<div class="flex gap-3 text-slate-400">
+<button class="hover:text-primary"><span class="material-symbols-outlined text-[20px]">candlestick_chart</span></button>
+<button class="hover:text-primary"><span class="material-symbols-outlined text-[20px]">show_chart</span></button>
+<button class="hover:text-primary"><span class="material-symbols-outlined text-[20px]">settings</span></button>
+</div>
+</div>
+<div class="relative w-full h-[320px] bg-background-dark border-b border-slate-800 chart-cursor">
+<div class="absolute inset-0 flex flex-col justify-between py-6 px-4 pointer-events-none">
+<div class="border-t border-slate-800/50 w-full h-0"></div>
+<div class="border-t border-slate-800/50 w-full h-0"></div>
+<div class="border-t border-slate-800/50 w-full h-0"></div>
+<div class="border-t border-slate-800/50 w-full h-0"></div>
+<div class="border-t border-slate-800/50 w-full h-0"></div>
+</div>
+<div class="absolute right-1 top-0 bottom-8 flex flex-col justify-between py-4 text-[10px] text-slate-500 font-mono text-right pointer-events-none z-10">
+<span>59,000</span>
+<span>58,200</span>
+<span>57,400</span>
+<span>56,600</span>
+<span>55,800</span>
+</div>
+<svg class="w-full h-full p-4 pb-8" preserveAspectRatio="none" viewBox="0 0 100 60">
+<polyline fill="none" opacity="0.7" points="0,35 10,34 20,32 30,30 40,28 50,30 60,32 70,30 80,28 90,27 100,28" stroke="#F59E0B" stroke-width="0.5"></polyline> 
+<polyline fill="none" opacity="0.7" points="0,40 10,38 20,36 30,35 40,34 50,35 60,36 70,35 80,34 90,33 100,34" stroke="#8B5CF6" stroke-width="0.5"></polyline> 
+<line stroke="#EF4444" stroke-width="0.5" x1="10" x2="10" y1="30" y2="45"></line>
+<rect fill="#EF4444" height="10" width="3" x="8.5" y="32"></rect>
+<line stroke="#22C55E" stroke-width="0.5" x1="20" x2="20" y1="28" y2="40"></line>
+<rect fill="#22C55E" height="8" width="3" x="18.5" y="30"></rect>
+<line stroke="#EF4444" stroke-width="0.5" x1="30" x2="30" y1="25" y2="35"></line>
+<rect fill="#EF4444" height="4" width="3" x="28.5" y="28"></rect>
+<line stroke="#22C55E" stroke-width="0.5" x1="40" x2="40" y1="20" y2="32"></line>
+<rect fill="#22C55E" height="6" width="3" x="38.5" y="24"></rect>
+<line stroke="#22C55E" stroke-width="0.5" x1="50" x2="50" y1="18" y2="30"></line>
+<rect fill="#22C55E" height="5" width="3" x="48.5" y="22"></rect>
+<line stroke="#EF4444" stroke-width="0.5" x1="60" x2="60" y1="22" y2="38"></line>
+<rect fill="#EF4444" height="10" width="3" x="58.5" y="25"></rect>
+<line stroke="#22C55E" stroke-width="0.5" x1="70" x2="70" y1="24" y2="36"></line>
+<rect fill="#22C55E" height="4" width="3" x="68.5" y="28"></rect>
+<line stroke="#9CA3AF" stroke-width="0.5" x1="80" x2="80" y1="26" y2="34"></line>
+<line stroke="#9CA3AF" stroke-width="0.5" x1="78.5" x2="81.5" y1="30" y2="30"></line>
+<line stroke="#22C55E" stroke-width="0.5" x1="90" x2="90" y1="25" y2="35"></line>
+<rect fill="#22C55E" height="5" width="3" x="88.5" y="27"></rect>
+<line opacity="0.6" stroke="#FFFFFF" stroke-dasharray="2,2" stroke-width="0.3" x1="70" x2="70" y1="0" y2="60"></line>
+<line opacity="0.6" stroke="#FFFFFF" stroke-dasharray="2,2" stroke-width="0.3" x1="0" x2="100" y1="30" y2="30"></line>
+<circle cx="70" cy="30" fill="#FFFFFF" r="1.5"></circle>
+</svg>
+<div class="absolute top-12 left-1/2 -translate-x-1/2 bg-surface-dark border border-slate-700 rounded px-2 py-1 shadow-xl z-20 flex gap-3 text-[10px]">
+<div class="flex flex-col">
+<span class="text-slate-500">O</span>
+<span class="text-white">57,100</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-500">H</span>
+<span class="text-accent-green">57,800</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-500">L</span>
+<span class="text-accent-red">56,900</span>
+</div>
+<div class="flex flex-col">
+<span class="text-slate-500">C</span>
+<span class="text-white">57,400</span>
+</div>
+</div>
+<div class="absolute bottom-6 left-4 right-4 h-12 flex items-end justify-between gap-1 opacity-40 pointer-events-none">
+<div class="w-full bg-accent-red/50 h-[40%] rounded-sm"></div>
+<div class="w-full bg-accent-green/50 h-[60%] rounded-sm"></div>
+<div class="w-full bg-accent-red/50 h-[30%] rounded-sm"></div>
+<div class="w-full bg-accent-green/50 h-[80%] rounded-sm"></div>
+<div class="w-full bg-accent-green/50 h-[50%] rounded-sm"></div>
+<div class="w-full bg-accent-red/50 h-[70%] rounded-sm"></div>
+<div class="w-full bg-accent-green/50 h-[45%] rounded-sm"></div>
+<div class="w-full bg-slate-400/50 h-[20%] rounded-sm"></div>
+<div class="w-full bg-accent-green/50 h-[55%] rounded-sm"></div>
+</div>
+<div class="absolute bottom-1 left-4 right-4 flex justify-between text-[10px] text-slate-500 font-mono">
+<span>Aug 1</span>
+<span>Aug 8</span>
+<span>Aug 15</span>
+<span>Aug 22</span>
+</div>
+</div>
+<div class="px-4 py-3 flex gap-2 overflow-x-auto no-scrollbar border-b border-slate-800 bg-background-dark">
+<button class="px-3 py-1 rounded-full text-xs font-semibold bg-surface-dark text-primary border border-primary/30">MA</button>
+<button class="px-3 py-1 rounded-full text-xs font-semibold bg-surface-dark text-slate-400 border border-slate-700">BB</button>
+<button class="px-3 py-1 rounded-full text-xs font-semibold bg-surface-dark text-primary border border-primary/30">VOL</button>
+<button class="px-3 py-1 rounded-full text-xs font-semibold bg-surface-dark text-slate-400 border border-slate-700">MACD</button>
+<button class="px-3 py-1 rounded-full text-xs font-semibold bg-surface-dark text-slate-400 border border-slate-700">RSI</button>
+</div>
+<div class="relative w-full h-[120px] bg-background-dark border-b border-slate-800 p-4">
+<div class="absolute top-2 left-4 text-[10px] font-bold text-slate-400">RSI(14) <span class="text-primary ml-1">45.2</span></div>
+<svg class="w-full h-full pt-4" preserveAspectRatio="none" viewBox="0 0 100 40">
+<line stroke="#475569" stroke-dasharray="2,2" stroke-width="0.5" x1="0" x2="100" y1="12" y2="12"></line> 
+<line stroke="#475569" stroke-dasharray="2,2" stroke-width="0.5" x1="0" x2="100" y1="28" y2="28"></line> 
+<polyline fill="none" points="0,20 10,25 20,28 30,22 40,15 50,18 60,25 70,22 80,20 90,24 100,21" stroke="#3B82F6" stroke-width="1.5"></polyline>
+</svg>
+<div class="absolute right-1 top-4 bottom-4 flex flex-col justify-between text-[8px] text-slate-600 font-mono text-right">
+<span>70</span>
+<span>30</span>
+</div>
+</div>
+<section class="px-4 py-6">
+<h3 class="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                Technical Summary
+                <span class="px-1.5 py-0.5 rounded bg-surface-dark border border-slate-700 text-[10px] font-normal text-slate-400">1D Interval</span>
+</h3>
+<div class="grid grid-cols-2 gap-3">
+<div class="bg-surface-dark p-3 rounded-xl border border-slate-800">
+<div class="text-xs text-slate-500 mb-1">RSI (14)</div>
+<div class="flex items-center justify-between">
+<span class="font-bold text-white">45.20</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Neutral</span>
+</div>
+</div>
+<div class="bg-surface-dark p-3 rounded-xl border border-slate-800 relative overflow-hidden">
+<div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-accent-green shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+<div class="text-xs text-slate-500 mb-1">MACD</div>
+<div class="flex items-center justify-between">
+<span class="font-bold text-accent-green">Bullish</span>
+<span class="text-[10px] text-slate-400">Buy Signal</span>
+</div>
+</div>
+<div class="bg-surface-dark p-3 rounded-xl border border-slate-800">
+<div class="text-xs text-slate-500 mb-1">Stoch %K</div>
+<div class="flex items-center justify-between">
+<span class="font-bold text-white">52.14</span>
+<span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Neutral</span>
+</div>
+</div>
+<div class="bg-surface-dark p-3 rounded-xl border border-slate-800 relative overflow-hidden">
+<div class="absolute top-3 right-3 w-2 h-2 rounded-full bg-accent-green shadow-[0_0_8px_rgba(34,197,94,0.6)]"></div>
+<div class="text-xs text-slate-500 mb-1">SMA 20</div>
+<div class="flex items-center justify-between">
+<span class="font-bold text-accent-green">Bullish</span>
+<span class="text-[10px] text-slate-400">&gt; Price</span>
+</div>
+</div>
+</div>
+</section>
+<section class="px-4 pb-8">
+<h3 class="text-sm font-bold text-white mb-3">Order Book</h3>
+<div class="bg-surface-dark rounded-xl border border-slate-800 overflow-hidden text-xs">
+<div class="grid grid-cols-3 border-b border-slate-800 bg-slate-900/50">
+<div class="py-2 text-center text-slate-500">Bid Vol</div>
+<div class="py-2 text-center text-slate-500">Price</div>
+<div class="py-2 text-center text-slate-500">Ask Vol</div>
+</div>
+<div class="grid grid-cols-3 border-b border-slate-800/50 relative">
+<div class="py-1.5 px-3"></div>
+<div class="py-1.5 px-3 text-center text-accent-red font-medium relative z-10">57,600</div>
+<div class="py-1.5 px-3 text-right text-slate-300 relative">
+<span class="relative z-10">12,402</span>
+<div class="absolute inset-y-0 right-0 bg-accent-red/10 w-[40%]"></div>
+</div>
+</div>
+<div class="grid grid-cols-3 border-b border-slate-800/50 relative">
+<div class="py-1.5 px-3"></div>
+<div class="py-1.5 px-3 text-center text-accent-red font-medium relative z-10">57,500</div>
+<div class="py-1.5 px-3 text-right text-slate-300 relative">
+<span class="relative z-10">45,100</span>
+<div class="absolute inset-y-0 right-0 bg-accent-red/10 w-[85%]"></div>
+</div>
+</div>
+<div class="py-1 bg-slate-800 text-center font-bold text-white border-y border-slate-700">
+                    57,400
+                </div>
+<div class="grid grid-cols-3 border-b border-slate-800/50 relative">
+<div class="py-1.5 px-3 text-left text-slate-300 relative">
+<span class="relative z-10">32,105</span>
+<div class="absolute inset-y-0 left-0 bg-accent-green/10 w-[60%]"></div>
+</div>
+<div class="py-1.5 px-3 text-center text-accent-green font-medium relative z-10">57,300</div>
+<div class="py-1.5 px-3"></div>
+</div>
+<div class="grid grid-cols-3 relative">
+<div class="py-1.5 px-3 text-left text-slate-300 relative">
+<span class="relative z-10">18,200</span>
+<div class="absolute inset-y-0 left-0 bg-accent-green/10 w-[35%]"></div>
+</div>
+<div class="py-1.5 px-3 text-center text-accent-green font-medium relative z-10">57,200</div>
+<div class="py-1.5 px-3"></div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-0 left-0 w-full bg-surface-dark border-t border-slate-800 p-4 pb-8 z-50">
+<div class="flex gap-3">
+<button class="flex-1 bg-accent-red hover:bg-red-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-red-900/20">
+                Sell
+            </button>
+<button class="flex-1 bg-accent-green hover:bg-green-600 text-white font-bold py-3.5 rounded-xl transition-colors shadow-lg shadow-green-900/20">
+                Buy
+            </button>
+</div>
+</div>
+
+</body></html>

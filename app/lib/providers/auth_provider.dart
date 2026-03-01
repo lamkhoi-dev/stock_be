@@ -72,6 +72,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: false);
   }
 
+  /// Set optimistic auth state when token exists but checkAuth timed out.
+  /// This marks the user as authenticated so screens don't redirect to login.
+  /// Call checkAuth() afterwards to load the actual user data in the background.
+  void setOptimisticAuth() {
+    state = state.copyWith(isAuthenticated: true, isLoading: false);
+  }
+
+  /// Silently retry loading user data (no loading spinner, no error state changes).
+  Future<void> silentCheckAuth() async {
+    try {
+      final token = await _storage.read(key: Env.accessTokenKey);
+      if (token == null) return;
+
+      final response = await _api.getMe();
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final user = User.fromJson(response.data['data']['user']);
+        state = state.copyWith(
+          user: user,
+          isAuthenticated: true,
+        );
+      }
+    } catch (_) {
+      // Silently ignore — user data will load next time
+    }
+  }
+
   /// Check if user has valid token on app start.
   Future<void> checkAuth() async {
     state = state.copyWith(isLoading: true);
