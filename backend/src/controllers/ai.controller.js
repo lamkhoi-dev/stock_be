@@ -24,8 +24,8 @@ const aiController = {
       if (!['basic', 'pro'].includes(level)) {
         throw ApiError.badRequest('Level must be "basic" or "pro"');
       }
-      if (!['gemini', 'openai'].includes(model)) {
-        throw ApiError.badRequest('Model must be "gemini" or "openai"');
+      if (!['gemini', 'openai', 'groq'].includes(model)) {
+        throw ApiError.badRequest('Model must be "gemini", "openai", or "groq"');
       }
 
       // Get fresh user with subscription data

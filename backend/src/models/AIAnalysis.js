@@ -32,7 +32,7 @@ const aiAnalysisSchema = new mongoose.Schema({
   // AI model used
   model: {
     type: String,
-    enum: ['gemini', 'openai', 'unknown'],
+    enum: ['gemini', 'openai', 'groq', 'unknown'],
     default: 'gemini',
   },
 
