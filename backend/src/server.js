@@ -18,10 +18,7 @@ const server = createServer(app);
 // ─── Start Server ────────────────────────────────────
 async function start() {
   try {
-    // Connect to MongoDB
-    await connectDB();
-
-    // Start listening — bind 0.0.0.0 for cloud deployments (Render, etc.)
+    // Start listening FIRST so Render/cloud sees the port open quickly
     server.listen(env.PORT, '0.0.0.0', () => {
       logger.info(`🚀 KRX Stock Backend running on port ${env.PORT} (${env.NODE_ENV})`);
       if (env.isProd) {
@@ -33,6 +30,9 @@ async function start() {
 
     // Phase 2A: Attach WebSocket server
     setupWebSocket(server);
+
+    // Connect to MongoDB (after port is bound — non-blocking for deploy health)
+    await connectDB();
 
   } catch (error) {
     logger.error('Failed to start server:', error);
