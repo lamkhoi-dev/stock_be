@@ -8,6 +8,7 @@ import env, { validateEnv } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { setupWebSocket, shutdownWebSocket } from './services/websocket.service.js';
 import logger from './utils/logger.js';
+import User from './models/User.js';
 
 // Validate environment variables
 validateEnv();
@@ -33,6 +34,20 @@ async function start() {
 
     // Connect to MongoDB (after port is bound — non-blocking for deploy health)
     await connectDB();
+
+    // One-time migration: upgrade all existing free users to pro
+    // TODO: Remove this migration after all users are upgraded
+    try {
+      const result = await User.updateMany(
+        { 'subscription.plan': 'free' },
+        { $set: { 'subscription.plan': 'pro' } },
+      );
+      if (result.modifiedCount > 0) {
+        logger.info(`Migration: Upgraded ${result.modifiedCount} users from free to pro`);
+      }
+    } catch (err) {
+      logger.warn(`Migration warning: ${err.message}`);
+    }
 
   } catch (error) {
     logger.error('Failed to start server:', error);
