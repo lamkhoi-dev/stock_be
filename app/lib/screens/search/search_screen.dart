@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../config/theme.dart';
+import '../../l10n/app_localizations.dart';
 import '../../services/api_client.dart';
 import '../../widgets/common/company_icon.dart';
 import '../../widgets/common/exchange_badge.dart';
@@ -177,7 +178,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           onChanged: _onSearchChanged,
           style: TextStyle(fontSize: 15, color: colorScheme.onSurface),
           decoration: InputDecoration(
-            hintText: 'Search stocks...',
+            hintText: S.of(context).searchStocks,
             hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
             prefixIcon: Icon(Icons.search, size: 20, color: colorScheme.secondary),
             suffixIcon: _searchController.text.isNotEmpty
@@ -213,7 +214,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'Recent Searches',
+                    S.of(context).recentSearches,
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
@@ -226,7 +227,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                       _saveRecentSearches();
                     },
                     child: Text(
-                      'Clear',
+                      S.of(context).clear,
                       style: TextStyle(fontSize: 13, color: colorScheme.primary),
                     ),
                   ),
@@ -271,7 +272,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Popular Stocks',
+              S.of(context).popularStocks,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -315,7 +316,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             Icon(Icons.search_off, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.38)),
             const SizedBox(height: 12),
             Text(
-              'No results for "${_searchController.text}"',
+              S.of(context).noResults(_searchController.text),
               style: TextStyle(color: colorScheme.secondary, fontSize: 14),
             ),
           ],

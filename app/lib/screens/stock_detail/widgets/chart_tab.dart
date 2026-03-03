@@ -7,6 +7,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart' show NumberFormat, DateFormat;
 
 import '../../../config/theme.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../services/api_client.dart';
 
 // ═══════════════════════════════════════════════════════════════
@@ -108,6 +109,17 @@ class _ChartTabState extends ConsumerState<ChartTab>
   }
 
   // ════════════════════════════════════════════════════════════
+  //  TIMEZONE HELPER — all KRX data is displayed in KST (UTC+9)
+  // ════════════════════════════════════════════════════════════
+
+  /// Convert a UTC [DateTime] to KST (Korean Standard Time, UTC+9).
+  /// Korean market data must always be shown in KST regardless of
+  /// the user's local timezone.  KST is fixed at UTC+9 year-round
+  /// (Korea does not observe daylight saving time).
+  static DateTime _toKST(DateTime utc) =>
+      utc.toUtc().add(const Duration(hours: 9));
+
+  // ════════════════════════════════════════════════════════════
   //  DATA LOADING
   // ════════════════════════════════════════════════════════════
 
@@ -195,7 +207,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
     // Estimate if this will be a large fetch
     final estCandles = _getMaxCandles();
     final hint = estCandles > 200
-        ? 'Loading ~$estCandles candles...'
+        ? S.of(context).loadingCandles(estCandles)
         : null;
     setState(() {
       _isLoading = true;
@@ -272,22 +284,27 @@ class _ChartTabState extends ConsumerState<ChartTab>
   }
 
   DateTime _parseDate(Map<String, dynamic> d) {
-    // Backend daily chart returns: { time: "2026-03-01", ... }
+    // Backend daily chart returns: { time: "2026-03-01", ... }  (KST date)
     // Backend minute chart returns: { time: 1709283600, timeStr: "14:25", ... }
+    //   where `time` is Unix epoch seconds and timeStr is HH:mm in KST.
     final timeVal = d['time'];
     final timeStr = d['timeStr']?.toString();
 
     // 1. Minute chart: time is Unix timestamp (int or num)
+    //    Always convert to KST (UTC+9) — Korean market data must
+    //    be displayed in Korean time, not in the user's local tz.
     if (timeVal is num && timeVal > 1_000_000_000) {
-      return DateTime.fromMillisecondsSinceEpoch(
+      return _toKST(DateTime.fromMillisecondsSinceEpoch(
         timeVal.toInt() * 1000,
         isUtc: true,
-      ).toLocal();
+      ));
     }
 
     final tStr = timeVal?.toString() ?? '';
 
-    // 2. Daily chart: time is ISO date string "2026-03-01"
+    // 2. Daily chart: time is ISO date string "2026-03-01" (KST date)
+    //    These are KST business dates from KIS API (stck_bsop_date).
+    //    Parse as plain date — no timezone shift needed for D/W/M candles.
     if (tStr.contains('-')) {
       final parsed = DateTime.tryParse(tStr);
       if (parsed != null) return parsed;
@@ -536,14 +553,14 @@ class _ChartTabState extends ConsumerState<ChartTab>
                 size: 48, color: cs.onSurface.withValues(alpha: 0.38)),
             const SizedBox(height: 12),
             Text(
-              _error ?? 'No chart data',
+              _error ?? S.of(context).noChartData,
               style: TextStyle(color: cs.secondary, fontSize: 13),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             TextButton(
               onPressed: _loadChartData,
-              child: const Text('Retry'),
+              child: Text(S.of(context).retry),
             ),
           ]),
         ),
@@ -634,6 +651,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
     // If only one option, no need to show selector
     if (available.length <= 1) return const SizedBox.shrink();
 
+    final labels = [S.of(context).minute, S.of(context).daily, S.of(context).weekly, S.of(context).monthly];
     final icons = [
       Icons.access_time,           // Minute
       Icons.calendar_view_day,     // Daily
@@ -641,57 +659,68 @@ class _ChartTabState extends ConsumerState<ChartTab>
       Icons.calendar_month,        // Monthly
     ];
 
-    return SizedBox(
-      height: 30,
-      child: ListView.separated(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: available.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 6),
-        itemBuilder: (context, idx) {
-          final intervalIdx = available[idx];
-          final active = _candleInterval == intervalIdx;
-          return GestureDetector(
-            onTap: () {
-              if (_candleInterval == intervalIdx) return;
-              setState(() => _candleInterval = intervalIdx);
-              _loadChartData();
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: active
-                    ? cs.primary.withValues(alpha: 0.15)
-                    : Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
-                border: Border.all(
-                  color: active
-                      ? cs.primary
-                      : cs.outline.withValues(alpha: 0.4),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    icons[intervalIdx],
-                    size: 14,
-                    color: active ? cs.primary : cs.secondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    _intervals[intervalIdx],
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-                      color: active ? cs.primary : cs.secondary,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          // Label so users can find it easily
+          Text(
+            S.of(context).candle,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: cs.secondary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          ...available.map((intervalIdx) {
+            final active = _candleInterval == intervalIdx;
+            return Padding(
+              padding: const EdgeInsets.only(right: 6),
+              child: GestureDetector(
+                onTap: () {
+                  if (_candleInterval == intervalIdx) return;
+                  setState(() => _candleInterval = intervalIdx);
+                  _loadChartData();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: active
+                        ? cs.primary.withValues(alpha: 0.18)
+                        : cs.surface,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: active
+                          ? cs.primary
+                          : cs.outline.withValues(alpha: 0.5),
+                      width: active ? 1.5 : 1,
                     ),
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        icons[intervalIdx],
+                        size: 14,
+                        color: active ? cs.primary : cs.secondary,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        labels[intervalIdx],
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: active ? FontWeight.w700 : FontWeight.w500,
+                          color: active ? cs.primary : cs.secondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          );
-        },
+            );
+          }),
+        ],
       ),
     );
   }
@@ -703,9 +732,9 @@ class _ChartTabState extends ConsumerState<ChartTab>
   Widget _buildChartTypeSelector() {
     final cs = Theme.of(context).colorScheme;
     final types = [
-      (Icons.candlestick_chart_outlined, 'Candle'),
-      (Icons.show_chart, 'Line'),
-      (Icons.area_chart_outlined, 'Area'),
+      (Icons.candlestick_chart_outlined, S.of(context).candle),
+      (Icons.show_chart, S.of(context).line),
+      (Icons.area_chart_outlined, S.of(context).area),
     ];
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -770,24 +799,37 @@ class _ChartTabState extends ConsumerState<ChartTab>
     final fmt = NumberFormat('#,##0');
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
         children: [
-          _ohlcvLabel('O', fmt.format(c.open), color),
-          const SizedBox(width: 8),
-          _ohlcvLabel('H', fmt.format(c.high), color),
-          const SizedBox(width: 8),
-          _ohlcvLabel('L', fmt.format(c.low), color),
-          const SizedBox(width: 8),
-          _ohlcvLabel('C', fmt.format(c.close), color),
-          const SizedBox(width: 8),
-          _ohlcvLabel('V', _fmtVol(c.volume), cs.secondary),
-          const Spacer(),
-          if (_crosshairIndex != null)
+          // Wrap OHLCV labels in Expanded + FittedBox so they scale
+          // down when prices have many digits (e.g. ₩213,500).
+          Expanded(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                children: [
+                  _ohlcvLabel('O', fmt.format(c.open), color),
+                  const SizedBox(width: 6),
+                  _ohlcvLabel('H', fmt.format(c.high), color),
+                  const SizedBox(width: 6),
+                  _ohlcvLabel('L', fmt.format(c.low), color),
+                  const SizedBox(width: 6),
+                  _ohlcvLabel('C', fmt.format(c.close), color),
+                  const SizedBox(width: 6),
+                  _ohlcvLabel('V', _fmtVol(c.volume), cs.secondary),
+                ],
+              ),
+            ),
+          ),
+          if (_crosshairIndex != null) ...[
+            const SizedBox(width: 4),
             Text(
               _fmtDateFull(c.date),
               style: TextStyle(fontSize: 10, color: cs.secondary),
             ),
+          ],
         ],
       ),
     );
@@ -979,7 +1021,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Technical Indicators',
+                Text(S.of(context).technicalIndicators,
                     style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
@@ -1337,10 +1379,10 @@ class _ChartTabState extends ConsumerState<ChartTab>
       _SummaryItem('Stoch %K', stochVal.toStringAsFixed(1),
           signal(stochVal, 80, 20, true)),
       if (ma5Val != null)
-        _SummaryItem('SMA 5', price > ma5Val ? 'Above' : 'Below',
+        _SummaryItem('SMA 5', price > ma5Val ? S.of(context).above : S.of(context).below,
             price > ma5Val ? 'Bullish' : 'Bearish'),
       if (ma20Val != null)
-        _SummaryItem('SMA 20', price > ma20Val ? 'Above' : 'Below',
+        _SummaryItem('SMA 20', price > ma20Val ? S.of(context).above : S.of(context).below,
             price > ma20Val ? 'Bullish' : 'Bearish'),
     ];
 
@@ -1356,7 +1398,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Technical Summary',
+            Text(S.of(context).technicalSummary,
                 style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -1388,7 +1430,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(item.signal,
+                    Text(_translateSignal(item.signal),
                         style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -1408,6 +1450,15 @@ class _ChartTabState extends ConsumerState<ChartTab>
         _ => Theme.of(context).colorScheme.secondary,
       };
 
+  String _translateSignal(String key) => switch (key) {
+        'Overbought' => S.of(context).overbought,
+        'Oversold' => S.of(context).oversold,
+        'Bullish' => S.of(context).bullish,
+        'Bearish' => S.of(context).bearish,
+        'Neutral' => S.of(context).neutral,
+        _ => key,
+      };
+
   // ──── Format helpers ────────────────────────────────────────
   String _fmtVol(double v) {
     if (v >= 1e9) return '${(v / 1e9).toStringAsFixed(1)}B';
@@ -1418,10 +1469,11 @@ class _ChartTabState extends ConsumerState<ChartTab>
 
   String _fmtDateFull(DateTime d) {
     if (_candleInterval == 0) {
-      // Minute: show full datetime
-      return DateFormat('yyyy-MM-dd HH:mm').format(d);
+      // Minute: show full datetime in KST
+      // (DateTime d is already in KST from _parseDate / _toKST)
+      return '${DateFormat('yyyy-MM-dd HH:mm').format(d)} KST';
     }
-    // Daily/Weekly/Monthly: show date only
+    // Daily/Weekly/Monthly: date is KST business date
     return DateFormat('yyyy-MM-dd').format(d);
   }
 }
@@ -1877,25 +1929,39 @@ class _MainChartPainter extends CustomPainter {
       _drawText(canvas, label, Offset(x, drawH + 4),
           fontSize: 9, color: textColor, center: true);
     }
+
+    // Show timezone indicator (KST) at bottom-right so users always
+    // know that all displayed times refer to Korean Standard Time.
+    _drawText(canvas, 'KST', Offset(drawW - 2, drawH + 4),
+        fontSize: 8, color: textColor.withValues(alpha: 0.5), center: false);
   }
 
+  /// Format axis date label.
+  /// All times are in KST (UTC+9) — Korean market timezone.
+  ///
+  /// Minute candles: "HH:mm" (already KST from _parseDate → _toKST)
+  /// Daily candles (<1Y): "M/DD" e.g. "2/27"
+  /// Daily candles (≥1Y): "'YY.MM.DD" e.g. "26.02.27"
+  /// Weekly candles: "'YY.MM.DD" e.g. "26.02.24"
+  /// Monthly candles: "'YY.MM" e.g. "26.02"
   String _fmtAxisDate(DateTime d) {
     if (candleInterval == 0) {
-      // Minute candles: show HH:mm
+      // Minute candles: HH:mm in KST
       return '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
     } else if (candleInterval == 1) {
       // Daily candles
       if (periodIndex >= 5) {
-        // 1Y+: year context needed → YY/M/D
-        return '${d.year.toString().substring(2)}/${d.month}/${d.day}';
+        // 1Y+: need year context → 'YY.MM.DD (compact, like Naver/KIS)
+        return '${d.year.toString().substring(2)}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
       }
-      return '${d.month}/${d.day}';
+      // <1Y: month/day is enough
+      return '${d.month}/${d.day.toString().padLeft(2, '0')}';
     } else if (candleInterval == 2) {
-      // Weekly candles: show YY/M/D
-      return '${d.year.toString().substring(2)}/${d.month}/${d.day}';
+      // Weekly candles: 'YY.MM.DD
+      return '${d.year.toString().substring(2)}.${d.month.toString().padLeft(2, '0')}.${d.day.toString().padLeft(2, '0')}';
     } else {
-      // Monthly candles: show YY/M
-      return '${d.year.toString().substring(2)}/${d.month}';
+      // Monthly candles: 'YY.MM
+      return '${d.year.toString().substring(2)}.${d.month.toString().padLeft(2, '0')}';
     }
   }
 

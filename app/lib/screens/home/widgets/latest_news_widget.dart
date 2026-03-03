@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../config/theme.dart';
 import '../../../widgets/common/shimmer_loading.dart';
 
@@ -29,7 +30,7 @@ class LatestNewsWidget extends StatelessWidget {
               Icon(Icons.newspaper_outlined, size: 18, color: colorScheme.primary),
               const SizedBox(width: 6),
               Text(
-                'Latest News',
+                S.of(context).latestNews,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -46,7 +47,7 @@ class LatestNewsWidget extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(24),
             child: Center(
-              child: Text('No news available', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38))),
+              child: Text(S.of(context).noNewsAvailable, style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38))),
             ),
           )
         else

@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-
 import '../../config/env.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/websocket_provider.dart';
 import '../../services/api_client.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Splash screen — animated app logo, checks auth state and navigates.
 class SplashScreen extends ConsumerStatefulWidget {
@@ -82,8 +81,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       final token = await storage.read(key: Env.accessTokenKey);
       if (!mounted) return;
       if (token != null) {
-        // Mark as authenticated so watchlist/other screens don't redirect
-        ref.read(authProvider.notifier).setOptimisticAuth();
+        // Mark as authenticated + restore cached user data (name, email, etc.)
+        await ref.read(authProvider.notifier).setOptimisticAuth();
+        if (!mounted) return;
         ref.read(websocketProvider.notifier).connect();
         context.go('/home');
         // Retry loading user data in background (no timeout pressure)
@@ -176,7 +176,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                     child: Column(
                       children: [
                         Text(
-                          'KRX Analysis',
+                          S.of(context).appName,
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w700,
@@ -191,7 +191,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                             const Text('🇰🇷', style: TextStyle(fontSize: 16)),
                             const SizedBox(width: 6),
                             Text(
-                              'Korean Stock AI Analysis',
+                              S.of(context).appTagline,
                               style: TextStyle(
                                 fontSize: 14,
                                 color: colorScheme.secondary,
@@ -222,7 +222,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Loading market data...',
+                          S.of(context).loadingMarketData,
                           style: TextStyle(fontSize: 12, color: colorScheme.onSurface.withValues(alpha: 0.38)),
                         ),
                       ],

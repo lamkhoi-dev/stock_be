@@ -6,6 +6,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 
 import 'config/theme.dart';
 import 'config/routes.dart';
+import 'l10n/app_localizations.dart';
 import 'providers/settings_provider.dart';
 
 void main() async {
@@ -58,6 +59,7 @@ class KRXStockApp extends ConsumerWidget {
         Locale('vi'),
       ],
       localizationsDelegates: const [
+        S.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,

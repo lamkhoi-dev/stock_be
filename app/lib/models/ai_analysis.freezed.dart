@@ -27,6 +27,8 @@ mixin _$AIAnalysis {
   String get type => throw _privateConstructorUsedError; // basic, pro
   String get signal => throw _privateConstructorUsedError; // BUY, SELL, HOLD
   double get confidence => throw _privateConstructorUsedError; // 0-100
+  int get sceScore =>
+      throw _privateConstructorUsedError; // Stock Comprehensive Evaluation 0-100
   AIAnalysisSections? get sections => throw _privateConstructorUsedError;
   int get creditsUsed => throw _privateConstructorUsedError;
   DateTime? get createdAt => throw _privateConstructorUsedError;
@@ -54,6 +56,7 @@ abstract class $AIAnalysisCopyWith<$Res> {
       String type,
       String signal,
       double confidence,
+      int sceScore,
       AIAnalysisSections? sections,
       int creditsUsed,
       DateTime? createdAt});
@@ -82,6 +85,7 @@ class _$AIAnalysisCopyWithImpl<$Res, $Val extends AIAnalysis>
     Object? type = null,
     Object? signal = null,
     Object? confidence = null,
+    Object? sceScore = null,
     Object? sections = freezed,
     Object? creditsUsed = null,
     Object? createdAt = freezed,
@@ -111,6 +115,10 @@ class _$AIAnalysisCopyWithImpl<$Res, $Val extends AIAnalysis>
           ? _value.confidence
           : confidence // ignore: cast_nullable_to_non_nullable
               as double,
+      sceScore: null == sceScore
+          ? _value.sceScore
+          : sceScore // ignore: cast_nullable_to_non_nullable
+              as int,
       sections: freezed == sections
           ? _value.sections
           : sections // ignore: cast_nullable_to_non_nullable
@@ -156,6 +164,7 @@ abstract class _$$AIAnalysisImplCopyWith<$Res>
       String type,
       String signal,
       double confidence,
+      int sceScore,
       AIAnalysisSections? sections,
       int creditsUsed,
       DateTime? createdAt});
@@ -183,6 +192,7 @@ class __$$AIAnalysisImplCopyWithImpl<$Res>
     Object? type = null,
     Object? signal = null,
     Object? confidence = null,
+    Object? sceScore = null,
     Object? sections = freezed,
     Object? creditsUsed = null,
     Object? createdAt = freezed,
@@ -212,6 +222,10 @@ class __$$AIAnalysisImplCopyWithImpl<$Res>
           ? _value.confidence
           : confidence // ignore: cast_nullable_to_non_nullable
               as double,
+      sceScore: null == sceScore
+          ? _value.sceScore
+          : sceScore // ignore: cast_nullable_to_non_nullable
+              as int,
       sections: freezed == sections
           ? _value.sections
           : sections // ignore: cast_nullable_to_non_nullable
@@ -238,6 +252,7 @@ class _$AIAnalysisImpl implements _AIAnalysis {
       required this.type,
       required this.signal,
       required this.confidence,
+      this.sceScore = 50,
       this.sections,
       this.creditsUsed = 0,
       this.createdAt});
@@ -262,6 +277,10 @@ class _$AIAnalysisImpl implements _AIAnalysis {
   final double confidence;
 // 0-100
   @override
+  @JsonKey()
+  final int sceScore;
+// Stock Comprehensive Evaluation 0-100
+  @override
   final AIAnalysisSections? sections;
   @override
   @JsonKey()
@@ -271,7 +290,7 @@ class _$AIAnalysisImpl implements _AIAnalysis {
 
   @override
   String toString() {
-    return 'AIAnalysis(id: $id, symbol: $symbol, model: $model, type: $type, signal: $signal, confidence: $confidence, sections: $sections, creditsUsed: $creditsUsed, createdAt: $createdAt)';
+    return 'AIAnalysis(id: $id, symbol: $symbol, model: $model, type: $type, signal: $signal, confidence: $confidence, sceScore: $sceScore, sections: $sections, creditsUsed: $creditsUsed, createdAt: $createdAt)';
   }
 
   @override
@@ -286,6 +305,8 @@ class _$AIAnalysisImpl implements _AIAnalysis {
             (identical(other.signal, signal) || other.signal == signal) &&
             (identical(other.confidence, confidence) ||
                 other.confidence == confidence) &&
+            (identical(other.sceScore, sceScore) ||
+                other.sceScore == sceScore) &&
             (identical(other.sections, sections) ||
                 other.sections == sections) &&
             (identical(other.creditsUsed, creditsUsed) ||
@@ -297,7 +318,7 @@ class _$AIAnalysisImpl implements _AIAnalysis {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(runtimeType, id, symbol, model, type, signal,
-      confidence, sections, creditsUsed, createdAt);
+      confidence, sceScore, sections, creditsUsed, createdAt);
 
   /// Create a copy of AIAnalysis
   /// with the given fields replaced by the non-null parameter values.
@@ -323,6 +344,7 @@ abstract class _AIAnalysis implements AIAnalysis {
       required final String type,
       required final String signal,
       required final double confidence,
+      final int sceScore,
       final AIAnalysisSections? sections,
       final int creditsUsed,
       final DateTime? createdAt}) = _$AIAnalysisImpl;
@@ -342,6 +364,8 @@ abstract class _AIAnalysis implements AIAnalysis {
   String get signal; // BUY, SELL, HOLD
   @override
   double get confidence; // 0-100
+  @override
+  int get sceScore; // Stock Comprehensive Evaluation 0-100
   @override
   AIAnalysisSections? get sections;
   @override
@@ -363,7 +387,23 @@ AIAnalysisSections _$AIAnalysisSectionsFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$AIAnalysisSections {
-  String? get summary => throw _privateConstructorUsedError;
+// 4 summary cards
+  String? get marketSentiment =>
+      throw _privateConstructorUsedError; // e.g. "낙관적", "비관적", "중립"
+  String? get actionStrategy =>
+      throw _privateConstructorUsedError; // e.g. "적극 매수 - 기술적 지표 상승 전환"
+  String? get investmentTiming =>
+      throw _privateConstructorUsedError; // e.g. "현재 매수 적기..."
+  String? get futureForecast =>
+      throw _privateConstructorUsedError; // e.g. "단기 목표가 ₩60,000..."
+// 3 tab sections
+  String? get strategy =>
+      throw _privateConstructorUsedError; // Detailed trading strategy
+  String? get risk => throw _privateConstructorUsedError; // Risk assessment
+  String? get trend => throw _privateConstructorUsedError; // Trend analysis
+// Summary
+  String? get summary =>
+      throw _privateConstructorUsedError; // Legacy fields (kept for backward compat)
   String? get technicalAnalysis => throw _privateConstructorUsedError;
   String? get fundamentalAnalysis => throw _privateConstructorUsedError;
   String? get sentiment => throw _privateConstructorUsedError;
@@ -388,7 +428,14 @@ abstract class $AIAnalysisSectionsCopyWith<$Res> {
       _$AIAnalysisSectionsCopyWithImpl<$Res, AIAnalysisSections>;
   @useResult
   $Res call(
-      {String? summary,
+      {String? marketSentiment,
+      String? actionStrategy,
+      String? investmentTiming,
+      String? futureForecast,
+      String? strategy,
+      String? risk,
+      String? trend,
+      String? summary,
       String? technicalAnalysis,
       String? fundamentalAnalysis,
       String? sentiment,
@@ -412,6 +459,13 @@ class _$AIAnalysisSectionsCopyWithImpl<$Res, $Val extends AIAnalysisSections>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? marketSentiment = freezed,
+    Object? actionStrategy = freezed,
+    Object? investmentTiming = freezed,
+    Object? futureForecast = freezed,
+    Object? strategy = freezed,
+    Object? risk = freezed,
+    Object? trend = freezed,
     Object? summary = freezed,
     Object? technicalAnalysis = freezed,
     Object? fundamentalAnalysis = freezed,
@@ -421,6 +475,34 @@ class _$AIAnalysisSectionsCopyWithImpl<$Res, $Val extends AIAnalysisSections>
     Object? keyPoints = freezed,
   }) {
     return _then(_value.copyWith(
+      marketSentiment: freezed == marketSentiment
+          ? _value.marketSentiment
+          : marketSentiment // ignore: cast_nullable_to_non_nullable
+              as String?,
+      actionStrategy: freezed == actionStrategy
+          ? _value.actionStrategy
+          : actionStrategy // ignore: cast_nullable_to_non_nullable
+              as String?,
+      investmentTiming: freezed == investmentTiming
+          ? _value.investmentTiming
+          : investmentTiming // ignore: cast_nullable_to_non_nullable
+              as String?,
+      futureForecast: freezed == futureForecast
+          ? _value.futureForecast
+          : futureForecast // ignore: cast_nullable_to_non_nullable
+              as String?,
+      strategy: freezed == strategy
+          ? _value.strategy
+          : strategy // ignore: cast_nullable_to_non_nullable
+              as String?,
+      risk: freezed == risk
+          ? _value.risk
+          : risk // ignore: cast_nullable_to_non_nullable
+              as String?,
+      trend: freezed == trend
+          ? _value.trend
+          : trend // ignore: cast_nullable_to_non_nullable
+              as String?,
       summary: freezed == summary
           ? _value.summary
           : summary // ignore: cast_nullable_to_non_nullable
@@ -462,7 +544,14 @@ abstract class _$$AIAnalysisSectionsImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {String? summary,
+      {String? marketSentiment,
+      String? actionStrategy,
+      String? investmentTiming,
+      String? futureForecast,
+      String? strategy,
+      String? risk,
+      String? trend,
+      String? summary,
       String? technicalAnalysis,
       String? fundamentalAnalysis,
       String? sentiment,
@@ -484,6 +573,13 @@ class __$$AIAnalysisSectionsImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
+    Object? marketSentiment = freezed,
+    Object? actionStrategy = freezed,
+    Object? investmentTiming = freezed,
+    Object? futureForecast = freezed,
+    Object? strategy = freezed,
+    Object? risk = freezed,
+    Object? trend = freezed,
     Object? summary = freezed,
     Object? technicalAnalysis = freezed,
     Object? fundamentalAnalysis = freezed,
@@ -493,6 +589,34 @@ class __$$AIAnalysisSectionsImplCopyWithImpl<$Res>
     Object? keyPoints = freezed,
   }) {
     return _then(_$AIAnalysisSectionsImpl(
+      marketSentiment: freezed == marketSentiment
+          ? _value.marketSentiment
+          : marketSentiment // ignore: cast_nullable_to_non_nullable
+              as String?,
+      actionStrategy: freezed == actionStrategy
+          ? _value.actionStrategy
+          : actionStrategy // ignore: cast_nullable_to_non_nullable
+              as String?,
+      investmentTiming: freezed == investmentTiming
+          ? _value.investmentTiming
+          : investmentTiming // ignore: cast_nullable_to_non_nullable
+              as String?,
+      futureForecast: freezed == futureForecast
+          ? _value.futureForecast
+          : futureForecast // ignore: cast_nullable_to_non_nullable
+              as String?,
+      strategy: freezed == strategy
+          ? _value.strategy
+          : strategy // ignore: cast_nullable_to_non_nullable
+              as String?,
+      risk: freezed == risk
+          ? _value.risk
+          : risk // ignore: cast_nullable_to_non_nullable
+              as String?,
+      trend: freezed == trend
+          ? _value.trend
+          : trend // ignore: cast_nullable_to_non_nullable
+              as String?,
       summary: freezed == summary
           ? _value.summary
           : summary // ignore: cast_nullable_to_non_nullable
@@ -529,7 +653,14 @@ class __$$AIAnalysisSectionsImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$AIAnalysisSectionsImpl implements _AIAnalysisSections {
   const _$AIAnalysisSectionsImpl(
-      {this.summary,
+      {this.marketSentiment,
+      this.actionStrategy,
+      this.investmentTiming,
+      this.futureForecast,
+      this.strategy,
+      this.risk,
+      this.trend,
+      this.summary,
       this.technicalAnalysis,
       this.fundamentalAnalysis,
       this.sentiment,
@@ -541,8 +672,33 @@ class _$AIAnalysisSectionsImpl implements _AIAnalysisSections {
   factory _$AIAnalysisSectionsImpl.fromJson(Map<String, dynamic> json) =>
       _$$AIAnalysisSectionsImplFromJson(json);
 
+// 4 summary cards
+  @override
+  final String? marketSentiment;
+// e.g. "낙관적", "비관적", "중립"
+  @override
+  final String? actionStrategy;
+// e.g. "적극 매수 - 기술적 지표 상승 전환"
+  @override
+  final String? investmentTiming;
+// e.g. "현재 매수 적기..."
+  @override
+  final String? futureForecast;
+// e.g. "단기 목표가 ₩60,000..."
+// 3 tab sections
+  @override
+  final String? strategy;
+// Detailed trading strategy
+  @override
+  final String? risk;
+// Risk assessment
+  @override
+  final String? trend;
+// Trend analysis
+// Summary
   @override
   final String? summary;
+// Legacy fields (kept for backward compat)
   @override
   final String? technicalAnalysis;
   @override
@@ -565,7 +721,7 @@ class _$AIAnalysisSectionsImpl implements _AIAnalysisSections {
 
   @override
   String toString() {
-    return 'AIAnalysisSections(summary: $summary, technicalAnalysis: $technicalAnalysis, fundamentalAnalysis: $fundamentalAnalysis, sentiment: $sentiment, riskAssessment: $riskAssessment, recommendation: $recommendation, keyPoints: $keyPoints)';
+    return 'AIAnalysisSections(marketSentiment: $marketSentiment, actionStrategy: $actionStrategy, investmentTiming: $investmentTiming, futureForecast: $futureForecast, strategy: $strategy, risk: $risk, trend: $trend, summary: $summary, technicalAnalysis: $technicalAnalysis, fundamentalAnalysis: $fundamentalAnalysis, sentiment: $sentiment, riskAssessment: $riskAssessment, recommendation: $recommendation, keyPoints: $keyPoints)';
   }
 
   @override
@@ -573,6 +729,18 @@ class _$AIAnalysisSectionsImpl implements _AIAnalysisSections {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$AIAnalysisSectionsImpl &&
+            (identical(other.marketSentiment, marketSentiment) ||
+                other.marketSentiment == marketSentiment) &&
+            (identical(other.actionStrategy, actionStrategy) ||
+                other.actionStrategy == actionStrategy) &&
+            (identical(other.investmentTiming, investmentTiming) ||
+                other.investmentTiming == investmentTiming) &&
+            (identical(other.futureForecast, futureForecast) ||
+                other.futureForecast == futureForecast) &&
+            (identical(other.strategy, strategy) ||
+                other.strategy == strategy) &&
+            (identical(other.risk, risk) || other.risk == risk) &&
+            (identical(other.trend, trend) || other.trend == trend) &&
             (identical(other.summary, summary) || other.summary == summary) &&
             (identical(other.technicalAnalysis, technicalAnalysis) ||
                 other.technicalAnalysis == technicalAnalysis) &&
@@ -592,6 +760,13 @@ class _$AIAnalysisSectionsImpl implements _AIAnalysisSections {
   @override
   int get hashCode => Object.hash(
       runtimeType,
+      marketSentiment,
+      actionStrategy,
+      investmentTiming,
+      futureForecast,
+      strategy,
+      risk,
+      trend,
       summary,
       technicalAnalysis,
       fundamentalAnalysis,
@@ -619,7 +794,14 @@ class _$AIAnalysisSectionsImpl implements _AIAnalysisSections {
 
 abstract class _AIAnalysisSections implements AIAnalysisSections {
   const factory _AIAnalysisSections(
-      {final String? summary,
+      {final String? marketSentiment,
+      final String? actionStrategy,
+      final String? investmentTiming,
+      final String? futureForecast,
+      final String? strategy,
+      final String? risk,
+      final String? trend,
+      final String? summary,
       final String? technicalAnalysis,
       final String? fundamentalAnalysis,
       final String? sentiment,
@@ -630,8 +812,25 @@ abstract class _AIAnalysisSections implements AIAnalysisSections {
   factory _AIAnalysisSections.fromJson(Map<String, dynamic> json) =
       _$AIAnalysisSectionsImpl.fromJson;
 
+// 4 summary cards
   @override
-  String? get summary;
+  String? get marketSentiment; // e.g. "낙관적", "비관적", "중립"
+  @override
+  String? get actionStrategy; // e.g. "적극 매수 - 기술적 지표 상승 전환"
+  @override
+  String? get investmentTiming; // e.g. "현재 매수 적기..."
+  @override
+  String? get futureForecast; // e.g. "단기 목표가 ₩60,000..."
+// 3 tab sections
+  @override
+  String? get strategy; // Detailed trading strategy
+  @override
+  String? get risk; // Risk assessment
+  @override
+  String? get trend; // Trend analysis
+// Summary
+  @override
+  String? get summary; // Legacy fields (kept for backward compat)
   @override
   String? get technicalAnalysis;
   @override

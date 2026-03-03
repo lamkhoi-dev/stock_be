@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../config/theme.dart';
 import '../../../widgets/common/company_icon.dart';
 import '../../../widgets/common/price_text.dart';
@@ -43,7 +44,7 @@ class _TopMoversWidgetState extends State<TopMoversWidget> {
               Icon(Icons.trending_up, size: 18, color: colorScheme.primary),
               const SizedBox(width: 6),
               Text(
-                'Top Movers',
+                S.of(context).topMovers,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -62,13 +63,13 @@ class _TopMoversWidgetState extends State<TopMoversWidget> {
                 child: Row(
                   children: [
                     _TabPill(
-                      label: 'Gainers',
+                      label: S.of(context).gainers,
                       isActive: _selectedTab == 0,
                       color: const Color(0xFF22C55E),
                       onTap: () => setState(() => _selectedTab = 0),
                     ),
                     _TabPill(
-                      label: 'Losers',
+                      label: S.of(context).losers,
                       isActive: _selectedTab == 1,
                       color: const Color(0xFFEF4444),
                       onTap: () => setState(() => _selectedTab = 1),
@@ -87,7 +88,7 @@ class _TopMoversWidgetState extends State<TopMoversWidget> {
           Padding(
             padding: const EdgeInsets.all(24),
             child: Center(
-              child: Text('No data available', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38))),
+              child: Text(S.of(context).noDataAvailable, style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38))),
             ),
           )
         else

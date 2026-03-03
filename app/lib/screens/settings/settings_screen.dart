@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/settings_provider.dart';
 
@@ -17,12 +18,12 @@ class SettingsScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(S.of(context).settings)),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
           // ─── Account Section ────────────────────────
-          _buildSectionHeader(context, 'Account'),
+          _buildSectionHeader(context, S.of(context).account),
           if (authState.isAuthenticated) ...[
             _buildUserCard(context, authState),
           ] else ...[
@@ -32,25 +33,25 @@ class SettingsScreen extends ConsumerWidget {
 
           // ─── Plan & Credits ─────────────────────────
           if (authState.isAuthenticated) ...[
-            _buildSectionHeader(context, 'Plan & Credits'),
+            _buildSectionHeader(context, S.of(context).planAndCredits),
             _buildPlanCard(context, authState),
             const SizedBox(height: 16),
           ],
 
           // ─── Preferences ────────────────────────────
-          _buildSectionHeader(context, 'Preferences'),
+          _buildSectionHeader(context, S.of(context).preferences),
           _SettingsTile(
             icon: Icons.dark_mode_outlined,
-            title: 'Theme',
+            title: S.of(context).theme,
             trailing: Text(
-              settings.themeMode == ThemeMode.dark ? 'Dark' : settings.themeMode == ThemeMode.light ? 'Light' : 'System',
+              settings.themeMode == ThemeMode.dark ? S.of(context).dark : settings.themeMode == ThemeMode.light ? S.of(context).light : S.of(context).system,
               style: TextStyle(fontSize: 13, color: colorScheme.secondary),
             ),
             onTap: () => _showThemePicker(context, ref, settings),
           ),
           _SettingsTile(
             icon: Icons.language_outlined,
-            title: 'Language',
+            title: S.of(context).language,
             trailing: Text(
               settings.language == 'ko' ? '한국어' : settings.language == 'vi' ? 'Tiếng Việt' : 'English',
               style: TextStyle(fontSize: 13, color: colorScheme.secondary),
@@ -59,7 +60,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           _SettingsTile(
             icon: Icons.notifications_outlined,
-            title: 'Push Notifications',
+            title: S.of(context).pushNotifications,
             trailing: Switch.adaptive(
               value: settings.pushNotifications,
               onChanged: (v) => ref.read(settingsProvider.notifier).setPushNotifications(v),
@@ -68,7 +69,7 @@ class SettingsScreen extends ConsumerWidget {
           ),
           _SettingsTile(
             icon: Icons.trending_up,
-            title: 'Price Alerts',
+            title: S.of(context).priceAlerts,
             trailing: Switch.adaptive(
               value: settings.priceAlerts,
               onChanged: (v) => ref.read(settingsProvider.notifier).setPriceAlerts(v),
@@ -78,25 +79,25 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // ─── About ─────────────────────────────────
-          _buildSectionHeader(context, 'About'),
+          _buildSectionHeader(context, S.of(context).about),
           _SettingsTile(
             icon: Icons.info_outlined,
-            title: 'App Version',
+            title: S.of(context).appVersion,
             trailing: Text('1.0.0', style: TextStyle(fontSize: 13, color: colorScheme.onSurface.withValues(alpha: 0.38))),
           ),
           _SettingsTile(
             icon: Icons.description_outlined,
-            title: 'Terms of Service',
+            title: S.of(context).termsOfService,
             onTap: () {},
           ),
           _SettingsTile(
             icon: Icons.privacy_tip_outlined,
-            title: 'Privacy Policy',
+            title: S.of(context).privacyPolicy,
             onTap: () {},
           ),
           _SettingsTile(
             icon: Icons.help_outline,
-            title: 'Help & Support',
+            title: S.of(context).helpAndSupport,
             onTap: () {},
           ),
           const SizedBox(height: 16),
@@ -108,7 +109,7 @@ class SettingsScreen extends ConsumerWidget {
               child: OutlinedButton.icon(
                 onPressed: () => _handleLogout(context, ref),
                 icon: const Icon(Icons.logout, size: 18, color: Color(0xFFEF4444)),
-                label: const Text('Log Out', style: TextStyle(color: Color(0xFFEF4444))),
+                label: Text(S.of(context).logOut, style: const TextStyle(color: Color(0xFFEF4444))),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: Color(0xFFEF4444), width: 0.5),
                   padding: const EdgeInsets.symmetric(vertical: 12),
@@ -228,7 +229,7 @@ class SettingsScreen extends ConsumerWidget {
               children: [
                 Text('Sign in', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
                 const SizedBox(height: 2),
-                Text('Access watchlist, AI analysis & more', style: TextStyle(fontSize: 13, color: colorScheme.secondary)),
+                Text(S.of(context).accessFeatures, style: TextStyle(fontSize: 13, color: colorScheme.secondary)),
               ],
             ),
           ),
@@ -240,7 +241,7 @@ class SettingsScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             ),
-            child: const Text('Sign In', style: TextStyle(fontSize: 13)),
+            child: Text(S.of(context).signIn, style: const TextStyle(fontSize: 13)),
           ),
         ],
       ),
@@ -279,7 +280,7 @@ class SettingsScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  isFree ? 'Free Plan' : 'Pro Plan',
+                  isFree ? S.of(context).freePlan : 'Pro Plan',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -289,14 +290,14 @@ class SettingsScreen extends ConsumerWidget {
               ),
               const Spacer(),
               Text(
-                '$credits credits',
+                S.of(context).credits(credits),
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: colorScheme.onSurface),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
-            isFree ? '3 basic AI analyses per day' : 'Unlimited basic + credit-based pro analysis',
+            isFree ? S.of(context).basicPerDay : S.of(context).unlimitedBasic,
             style: TextStyle(fontSize: 12, color: colorScheme.secondary),
           ),
           if (isFree) ...[
@@ -311,7 +312,7 @@ class SettingsScreen extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                child: const Text('Upgrade to Pro', style: TextStyle(fontWeight: FontWeight.w700)),
+                child: Text(S.of(context).upgradeToPro, style: const TextStyle(fontWeight: FontWeight.w700)),
               ),
             ),
           ],
@@ -332,12 +333,12 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Container(width: 40, height: 4, decoration: BoxDecoration(color: colorScheme.outline, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 16),
-          Text('Theme', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
+          Text(S.of(context).theme, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
           const SizedBox(height: 8),
           ...[
-            (ThemeMode.dark, 'Dark', Icons.dark_mode),
-            (ThemeMode.light, 'Light', Icons.light_mode),
-            (ThemeMode.system, 'System', Icons.settings_brightness),
+            (ThemeMode.dark, S.of(context).dark, Icons.dark_mode),
+            (ThemeMode.light, S.of(context).light, Icons.light_mode),
+            (ThemeMode.system, S.of(context).system, Icons.settings_brightness),
           ].map((item) {
             final (mode, label, icon) = item;
             final isActive = settings.themeMode == mode;
@@ -369,7 +370,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 12),
           Container(width: 40, height: 4, decoration: BoxDecoration(color: colorScheme.outline, borderRadius: BorderRadius.circular(2))),
           const SizedBox(height: 16),
-          Text('Language', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
+          Text(S.of(context).language, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: colorScheme.onSurface)),
           const SizedBox(height: 8),
           ...[
             ('en', 'English', '🇺🇸'),
@@ -401,12 +402,12 @@ class SettingsScreen extends ConsumerWidget {
       builder: (context) => AlertDialog(
         backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Log Out', style: TextStyle(color: colorScheme.onSurface)),
-        content: Text('Are you sure you want to log out?', style: TextStyle(color: colorScheme.secondary)),
+        title: Text(S.of(context).logOut, style: TextStyle(color: colorScheme.onSurface)),
+        content: Text(S.of(context).logOutConfirm, style: TextStyle(color: colorScheme.secondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Cancel', style: TextStyle(color: colorScheme.secondary)),
+            child: Text(S.of(context).cancel, style: TextStyle(color: colorScheme.secondary)),
           ),
           TextButton(
             onPressed: () {
@@ -414,7 +415,7 @@ class SettingsScreen extends ConsumerWidget {
               ref.read(authProvider.notifier).logout();
               context.go('/auth/login');
             },
-            child: const Text('Log Out', style: TextStyle(color: Color(0xFFEF4444))),
+            child: Text(S.of(context).logOut, style: const TextStyle(color: Color(0xFFEF4444))),
           ),
         ],
       ),

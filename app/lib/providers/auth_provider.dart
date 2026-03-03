@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -74,9 +76,34 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   /// Set optimistic auth state when token exists but checkAuth timed out.
   /// This marks the user as authenticated so screens don't redirect to login.
-  /// Call checkAuth() afterwards to load the actual user data in the background.
-  void setOptimisticAuth() {
-    state = state.copyWith(isAuthenticated: true, isLoading: false);
+  /// Restores cached user data from secure storage so profile shows correct name.
+  Future<void> setOptimisticAuth() async {
+    User? cachedUser;
+    try {
+      final userJson = await _storage.read(key: Env.userKey);
+      if (userJson != null) {
+        cachedUser = User.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
+      }
+    } catch (_) {
+      // Ignore — worst case we show default 'User'
+    }
+    state = state.copyWith(
+      isAuthenticated: true,
+      isLoading: false,
+      user: cachedUser,
+    );
+  }
+
+  /// Persist user data to secure storage for offline access.
+  Future<void> _cacheUser(User user) async {
+    try {
+      await _storage.write(
+        key: Env.userKey,
+        value: jsonEncode(user.toJson()),
+      );
+    } catch (_) {
+      // Non-critical
+    }
   }
 
   /// Silently retry loading user data (no loading spinner, no error state changes).
@@ -88,6 +115,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _api.getMe();
       if (response.statusCode == 200 && response.data['success'] == true) {
         final user = User.fromJson(response.data['data']['user']);
+        await _cacheUser(user);
         state = state.copyWith(
           user: user,
           isAuthenticated: true,
@@ -111,6 +139,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final response = await _api.getMe();
       if (response.statusCode == 200 && response.data['success'] == true) {
         final user = User.fromJson(response.data['data']['user']);
+        await _cacheUser(user);
         state = state.copyWith(
           user: user,
           isLoading: false,
@@ -142,6 +171,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             key: Env.refreshTokenKey, value: data['refreshToken']);
 
         final user = User.fromJson(data['user']);
+        await _cacheUser(user);
         state = state.copyWith(
           user: user,
           isLoading: false,
@@ -173,6 +203,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
             key: Env.refreshTokenKey, value: data['refreshToken']);
 
         final user = User.fromJson(data['user']);
+        await _cacheUser(user);
         state = state.copyWith(
           user: user,
           isLoading: false,
@@ -200,6 +231,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> _clearTokens() async {
     await _storage.delete(key: Env.accessTokenKey);
     await _storage.delete(key: Env.refreshTokenKey);
+    await _storage.delete(key: Env.userKey);
   }
 }
 

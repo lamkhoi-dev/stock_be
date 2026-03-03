@@ -14,6 +14,7 @@ _$AIAnalysisImpl _$$AIAnalysisImplFromJson(Map<String, dynamic> json) =>
       type: json['type'] as String,
       signal: json['signal'] as String,
       confidence: (json['confidence'] as num).toDouble(),
+      sceScore: (json['sceScore'] as num?)?.toInt() ?? 50,
       sections: json['sections'] == null
           ? null
           : AIAnalysisSections.fromJson(
@@ -32,6 +33,7 @@ Map<String, dynamic> _$$AIAnalysisImplToJson(_$AIAnalysisImpl instance) =>
       'type': instance.type,
       'signal': instance.signal,
       'confidence': instance.confidence,
+      'sceScore': instance.sceScore,
       'sections': instance.sections,
       'creditsUsed': instance.creditsUsed,
       'createdAt': instance.createdAt?.toIso8601String(),
@@ -40,6 +42,13 @@ Map<String, dynamic> _$$AIAnalysisImplToJson(_$AIAnalysisImpl instance) =>
 _$AIAnalysisSectionsImpl _$$AIAnalysisSectionsImplFromJson(
         Map<String, dynamic> json) =>
     _$AIAnalysisSectionsImpl(
+      marketSentiment: json['marketSentiment'] as String?,
+      actionStrategy: json['actionStrategy'] as String?,
+      investmentTiming: json['investmentTiming'] as String?,
+      futureForecast: json['futureForecast'] as String?,
+      strategy: json['strategy'] as String?,
+      risk: json['risk'] as String?,
+      trend: json['trend'] as String?,
       summary: json['summary'] as String?,
       technicalAnalysis: json['technicalAnalysis'] as String?,
       fundamentalAnalysis: json['fundamentalAnalysis'] as String?,
@@ -54,6 +63,13 @@ _$AIAnalysisSectionsImpl _$$AIAnalysisSectionsImplFromJson(
 Map<String, dynamic> _$$AIAnalysisSectionsImplToJson(
         _$AIAnalysisSectionsImpl instance) =>
     <String, dynamic>{
+      'marketSentiment': instance.marketSentiment,
+      'actionStrategy': instance.actionStrategy,
+      'investmentTiming': instance.investmentTiming,
+      'futureForecast': instance.futureForecast,
+      'strategy': instance.strategy,
+      'risk': instance.risk,
+      'trend': instance.trend,
       'summary': instance.summary,
       'technicalAnalysis': instance.technicalAnalysis,
       'fundamentalAnalysis': instance.fundamentalAnalysis,

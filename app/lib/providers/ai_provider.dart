@@ -67,22 +67,30 @@ class AINotifier extends StateNotifier<AIState> {
       final response = await _api.analyzeStock(symbol, level: 'basic');
       if (response.data['success'] == true) {
         final data = response.data['data'] as Map<String, dynamic>;
+        final a = data['analysis'] as Map<String, dynamic>? ?? {};
         final analysis = AIAnalysis(
           id: data['id'] ?? '',
           symbol: data['symbol'] ?? symbol,
           model: data['model'] ?? 'gemini',
           type: 'basic',
-          signal: data['analysis']?['signal'] ?? 'HOLD',
-          confidence: (data['analysis']?['confidence'] ?? 50).toDouble(),
+          signal: a['signal'] ?? 'HOLD',
+          confidence: (a['confidence'] ?? 50).toDouble(),
+          sceScore: (a['sceScore'] ?? 50) as int,
           sections: AIAnalysisSections(
-            summary: data['analysis']?['summary'],
-            technicalAnalysis: data['analysis']?['technicalAnalysis'],
-            fundamentalAnalysis: data['analysis']?['fundamentalAnalysis'],
-            sentiment: data['analysis']?['sentiment'],
-            riskAssessment: data['analysis']?['riskAssessment'],
-            recommendation: data['analysis']?['recommendation'],
-            keyPoints: (data['analysis']?['keyPoints'] as List<dynamic>?)
-                ?.cast<String>(),
+            marketSentiment: a['marketSentiment'],
+            actionStrategy: a['actionStrategy'],
+            investmentTiming: a['investmentTiming'],
+            futureForecast: a['futureForecast'],
+            strategy: a['strategy'],
+            risk: a['risk'],
+            trend: a['trend'],
+            summary: a['summary'],
+            technicalAnalysis: a['technicalAnalysis'],
+            fundamentalAnalysis: a['fundamentalAnalysis'],
+            sentiment: a['sentiment'],
+            riskAssessment: a['riskAssessment'],
+            recommendation: a['recommendation'],
+            keyPoints: (a['keyPoints'] as List<dynamic>?)?.cast<String>(),
           ),
           creditsUsed: data['creditsUsed'] ?? 0,
           createdAt: DateTime.tryParse(data['createdAt'] ?? ''),
@@ -115,22 +123,30 @@ class AINotifier extends StateNotifier<AIState> {
           await _api.analyzeStock(symbol, level: 'pro', model: model);
       if (response.data['success'] == true) {
         final data = response.data['data'] as Map<String, dynamic>;
+        final a = data['analysis'] as Map<String, dynamic>? ?? {};
         final analysis = AIAnalysis(
           id: data['id'] ?? '',
           symbol: data['symbol'] ?? symbol,
           model: data['model'] ?? model,
           type: 'pro',
-          signal: data['analysis']?['signal'] ?? 'HOLD',
-          confidence: (data['analysis']?['confidence'] ?? 50).toDouble(),
+          signal: a['signal'] ?? 'HOLD',
+          confidence: (a['confidence'] ?? 50).toDouble(),
+          sceScore: (a['sceScore'] ?? 50) as int,
           sections: AIAnalysisSections(
-            summary: data['analysis']?['summary'],
-            technicalAnalysis: data['analysis']?['technicalAnalysis'],
-            fundamentalAnalysis: data['analysis']?['fundamentalAnalysis'],
-            sentiment: data['analysis']?['sentiment'],
-            riskAssessment: data['analysis']?['riskAssessment'],
-            recommendation: data['analysis']?['recommendation'],
-            keyPoints: (data['analysis']?['keyPoints'] as List<dynamic>?)
-                ?.cast<String>(),
+            marketSentiment: a['marketSentiment'],
+            actionStrategy: a['actionStrategy'],
+            investmentTiming: a['investmentTiming'],
+            futureForecast: a['futureForecast'],
+            strategy: a['strategy'],
+            risk: a['risk'],
+            trend: a['trend'],
+            summary: a['summary'],
+            technicalAnalysis: a['technicalAnalysis'],
+            fundamentalAnalysis: a['fundamentalAnalysis'],
+            sentiment: a['sentiment'],
+            riskAssessment: a['riskAssessment'],
+            recommendation: a['recommendation'],
+            keyPoints: (a['keyPoints'] as List<dynamic>?)?.cast<String>(),
           ),
           creditsUsed: data['creditsUsed'] ?? 0,
           createdAt: DateTime.tryParse(data['createdAt'] ?? ''),

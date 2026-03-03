@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../l10n/app_localizations.dart';
 import '../../models/watchlist_item.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/watchlist_provider.dart';
@@ -81,16 +82,16 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Watchlist'),
+        title: Text(S.of(context).watchlist),
         actions: [
           // Sort button
           PopupMenuButton<String>(
             onSelected: (v) => setState(() => _sortBy = v),
             icon: const Icon(Icons.sort, size: 22),
             itemBuilder: (_) => [
-              _menuItem('added', 'Date Added', _sortBy == 'added'),
-              _menuItem('name', 'Name', _sortBy == 'name'),
-              _menuItem('change', 'Change %', _sortBy == 'change'),
+              _menuItem('added', S.of(context).dateAdded, _sortBy == 'added'),
+              _menuItem('name', S.of(context).name, _sortBy == 'name'),
+              _menuItem('change', S.of(context).changePercent, _sortBy == 'change'),
             ],
           ),
         ],
@@ -101,14 +102,14 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
               ? const ShimmerStockList(itemCount: 5)
               : watchState.error != null
                   ? ErrorRetryWidget(
-                      message: 'Failed to load watchlist',
+                      message: S.of(context).failedLoadWatchlist,
                       onRetry: () => ref.read(watchlistProvider.notifier).loadWatchlist(),
                     )
                   : watchState.items.isEmpty
-                      ? const EmptyStateWidget(
+                      ? EmptyStateWidget(
                           icon: Icons.star_outline,
-                          message: 'Your watchlist is empty',
-                          subtitle: 'Add stocks from search or stock detail page',
+                          message: S.of(context).watchlistEmpty,
+                          subtitle: S.of(context).watchlistEmptySubtitle,
                         )
                       : _buildWatchlist(appColors, watchState.items),
     );
@@ -149,13 +150,13 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
             ),
             const SizedBox(height: 20),
             Text(
-              'Sign in to manage\nyour watchlist',
+              S.of(context).signInToManageWatchlist,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: colorScheme.onSurface),
             ),
             const SizedBox(height: 8),
             Text(
-              'Track your favorite stocks and get real-time updates',
+              S.of(context).trackFavoriteStocks,
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 14, color: colorScheme.secondary),
             ),
@@ -168,7 +169,7 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Sign In'),
+              child: Text(S.of(context).signIn),
             ),
           ],
         ),
@@ -207,8 +208,8 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
               final result = await ref.read(watchlistProvider.notifier).removeStock(item.symbol);
               if (!result && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to remove from watchlist'),
+                  SnackBar(
+                    content: Text(S.of(context).failedRemoveWatchlist),
                     backgroundColor: Color(0xFFEF4444),
                   ),
                 );
@@ -218,10 +219,10 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
             onDismissed: (direction) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('${item.name} removed from watchlist'),
+                  content: Text(S.of(context).removedFromWatchlist(item.name)),
                   backgroundColor: appColors.surfaceHover,
                   action: SnackBarAction(
-                    label: 'Undo',
+                    label: S.of(context).undo,
                     textColor: colorScheme.primary,
                     onPressed: () {
                       ref.read(watchlistProvider.notifier).addStock(item.symbol);

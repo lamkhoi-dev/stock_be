@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../services/api_client.dart';
 import '../../utils/helpers.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Forgot password screen — enter email to receive reset link.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -57,7 +58,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           icon: const Icon(Icons.arrow_back_ios, size: 20),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Reset Password'),
+        title: Text(S.of(context).forgotTitle),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -88,7 +89,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'Forgot your password?',
+            S.of(context).forgotHeading,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -97,7 +98,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            "Enter your email address and we'll send you a link to reset your password.",
+            S.of(context).forgotDescription,
             style: TextStyle(fontSize: 14, color: colorScheme.secondary, height: 1.5),
           ),
           const SizedBox(height: 32),
@@ -108,9 +109,9 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             textInputAction: TextInputAction.done,
             validator: validateEmail,
             onFieldSubmitted: (_) => _handleSendResetLink(),
-            decoration: const InputDecoration(
-              hintText: 'Email',
-              prefixIcon: Icon(Icons.email_outlined, size: 20),
+            decoration: InputDecoration(
+              hintText: S.of(context).loginEmail,
+              prefixIcon: const Icon(Icons.email_outlined, size: 20),
             ),
           ),
           if (_error != null) ...[
@@ -142,8 +143,8 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
                       height: 22,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text(
-                      'Send Reset Link',
+                  : Text(
+                      S.of(context).forgotButton,
                       style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                     ),
             ),
@@ -154,7 +155,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             child: GestureDetector(
               onTap: () => context.pop(),
               child: Text(
-                'Back to Login',
+                S.of(context).forgotBackToLogin,
                 style: TextStyle(color: colorScheme.primary, fontSize: 14, fontWeight: FontWeight.w500),
               ),
             ),
@@ -180,7 +181,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 24),
         Text(
-          'Check your email',
+          S.of(context).forgotCheckEmail,
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w700,
@@ -189,7 +190,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 12),
         Text(
-          'We sent a password reset link to\n${_emailController.text}',
+          S.of(context).forgotEmailSent(_emailController.text),
           style: TextStyle(fontSize: 14, color: colorScheme.secondary, height: 1.5),
           textAlign: TextAlign.center,
         ),
@@ -199,7 +200,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
           height: 50,
           child: ElevatedButton(
             onPressed: () => context.go('/auth/login'),
-            child: const Text('Back to Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+            child: Text(S.of(context).forgotBackToLogin, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
           ),
         ),
         const SizedBox(height: 16),
@@ -209,7 +210,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
             _emailController.clear();
           }),
           child: Text(
-            'Try another email',
+            S.of(context).forgotTryAnother,
             style: TextStyle(color: colorScheme.secondary, fontSize: 14),
           ),
         ),

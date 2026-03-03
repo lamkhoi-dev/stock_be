@@ -47,7 +47,7 @@ function getGroq() {
 // ─── Prompt Templates ────────────────────────────────
 
 function buildBasicPrompt(symbol, stockData, indicators) {
-  return `You are a Korean stock market analyst AI. Analyze the following stock data and provide a concise analysis in Korean.
+  return `You are a Korean stock market analyst AI. Analyze the following stock data and provide a structured terminal-style analysis in Korean.
 
 Stock: ${symbol} (${stockData.name || symbol})
 Current Price: ₩${stockData.price?.toLocaleString()}
@@ -72,11 +72,15 @@ Provide your analysis in the following JSON format (respond ONLY with valid JSON
 {
   "signal": "strong_buy|buy|hold|sell|strong_sell",
   "confidence": <number 0-100>,
-  "summary": "<2-3 sentence summary in Korean>",
-  "trend": "<current trend description in Korean>",
-  "support": <number - key support price>,
-  "resistance": <number - key resistance price>,
-  "recommendation": "<specific action recommendation in Korean>"
+  "sceScore": <number 0-100, Stock Comprehensive Evaluation score based on technical + fundamental factors>,
+  "marketSentiment": "<1-2 word sentiment label in Korean, e.g. 낙관적, 비관적, 중립>",
+  "actionStrategy": "<action recommendation in Korean, e.g. 매수 (적극 매수), 매도, 관망 + brief strategy detail>",
+  "investmentTiming": "<specific entry/exit timing advice in Korean, 2-3 sentences>",
+  "futureForecast": "<short-term price forecast in Korean with target price ranges, 2-3 sentences>",
+  "strategy": "<detailed trading strategy in Korean, 3-5 sentences covering entry points, position sizing, stop-loss>",
+  "risk": "<risk assessment in Korean, 3-5 sentences covering key risk factors and mitigation>",
+  "trend": "<trend analysis in Korean, 3-5 sentences covering current trend, momentum, support/resistance levels>",
+  "summary": "<executive summary paragraph in Korean, 3-5 sentences>"
 }`;
 }
 
@@ -113,10 +117,15 @@ Provide a DETAILED professional analysis in the following JSON format (respond O
 {
   "signal": "strong_buy|buy|hold|sell|strong_sell",
   "confidence": <number 0-100>,
-  "summary": "<executive summary 3-5 sentences in Korean>",
-  "technicalAnalysis": "<detailed technical analysis in Korean, 200+ words, covering trend, momentum, volume, support/resistance, chart patterns>",
-  "fundamentalAnalysis": "<fundamental valuation analysis in Korean, 100+ words, covering PER/PBR/EPS relative to sector>",
-  "riskAssessment": "<risk factors and mitigation in Korean, 100+ words>",
+  "sceScore": <number 0-100, Stock Comprehensive Evaluation score based on technical + fundamental + momentum factors>,
+  "marketSentiment": "<1-2 word sentiment label in Korean, e.g. 매우 낙관적, 비관적, 중립>",
+  "actionStrategy": "<specific action recommendation in Korean with brief detail, e.g. 적극 매수 - 기술적 지표 상승 전환>",
+  "investmentTiming": "<investment timing advice in Korean, 2-3 sentences with specific entry/exit points>",
+  "futureForecast": "<short/mid-term forecast in Korean with price targets, 2-3 sentences>",
+  "strategy": "<detailed trading strategy in Korean, 5-8 sentences covering entry points, position sizing, stop-loss, take-profit levels>",
+  "risk": "<comprehensive risk assessment in Korean, 5-8 sentences covering market risk, sector risk, company-specific risk, mitigation strategies>",
+  "trend": "<detailed trend analysis in Korean, 5-8 sentences covering current trend direction, momentum strength, volume confirmation, support/resistance levels, MA crossovers, chart patterns>",
+  "summary": "<executive summary in Korean, 4-6 sentences covering overall assessment>",
   "keyLevels": {
     "support": [<support level 1>, <support level 2>],
     "resistance": [<resistance level 1>, <resistance level 2>]
@@ -125,7 +134,6 @@ Provide a DETAILED professional analysis in the following JSON format (respond O
     "upside": <target price if bullish>,
     "downside": <target price if bearish>
   },
-  "strategy": "<specific trading strategy recommendation in Korean, including entry/exit points and position sizing>",
   "timeframe": "<recommended investment timeframe in Korean>"
 }`;
 }
@@ -181,7 +189,7 @@ async function analyzeBasic(symbol) {
         model: 'llama-3.3-70b-versatile',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.3,
-        max_tokens: 500,
+        max_tokens: 1500,
       });
       analysisText = completion.choices[0]?.message?.content;
       tokensUsed = completion.usage?.total_tokens || 0;
@@ -203,11 +211,18 @@ async function analyzeBasic(symbol) {
     analysis: {
       signal: parsed.signal || 'neutral',
       confidence: parsed.confidence || 50,
+      sceScore: parsed.sceScore || 50,
+      marketSentiment: parsed.marketSentiment || '',
+      actionStrategy: parsed.actionStrategy || '',
+      investmentTiming: parsed.investmentTiming || '',
+      futureForecast: parsed.futureForecast || '',
       summary: parsed.summary || '',
-      technicalAnalysis: parsed.trend || '',
+      strategy: parsed.strategy || '',
+      risk: parsed.risk || '',
+      trend: parsed.trend || '',
       keyLevels: {
-        support: parsed.support ? [parsed.support] : [],
-        resistance: parsed.resistance ? [parsed.resistance] : [],
+        support: parsed.keyLevels?.support || (parsed.support ? [parsed.support] : []),
+        resistance: parsed.keyLevels?.resistance || (parsed.resistance ? [parsed.resistance] : []),
       },
     },
     inputData: {
@@ -305,10 +320,15 @@ async function analyzePro(symbol, preferredModel = 'gemini') {
     analysis: {
       signal: parsed.signal || 'neutral',
       confidence: parsed.confidence || 50,
+      sceScore: parsed.sceScore || 50,
+      marketSentiment: parsed.marketSentiment || '',
+      actionStrategy: parsed.actionStrategy || '',
+      investmentTiming: parsed.investmentTiming || '',
+      futureForecast: parsed.futureForecast || '',
       summary: parsed.summary || '',
-      technicalAnalysis: parsed.technicalAnalysis || '',
-      fundamentalAnalysis: parsed.fundamentalAnalysis || '',
-      riskAssessment: parsed.riskAssessment || '',
+      strategy: parsed.strategy || '',
+      risk: parsed.risk || '',
+      trend: parsed.trend || '',
       keyLevels: {
         support: parsed.keyLevels?.support || [],
         resistance: parsed.keyLevels?.resistance || [],
@@ -318,7 +338,6 @@ async function analyzePro(symbol, preferredModel = 'gemini') {
         downside: parsed.targets?.downside || null,
       },
     },
-    strategy: parsed.strategy || '',
     timeframe: parsed.timeframe || '',
     inputData: {
       price: stockData.price,

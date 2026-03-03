@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../utils/formatters.dart';
 
 /// Info tab — Price details grid + 52-week range + day range.
@@ -19,13 +20,13 @@ class InfoTab extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Price Details
-          _buildSectionTitle('Price Details', colorScheme),
+          _buildSectionTitle(S.of(context).priceDetails, colorScheme),
           const SizedBox(height: 10),
-          _buildPriceGrid(colorScheme),
+          _buildPriceGrid(context, colorScheme),
           const SizedBox(height: 20),
 
           // Day Range
-          _buildSectionTitle('Day Range', colorScheme),
+          _buildSectionTitle(S.of(context).dayRange, colorScheme),
           const SizedBox(height: 10),
           _buildRangeBar(
             colorScheme: colorScheme,
@@ -36,7 +37,7 @@ class InfoTab extends StatelessWidget {
           const SizedBox(height: 20),
 
           // 52 Week Range
-          _buildSectionTitle('52-Week Range', colorScheme),
+          _buildSectionTitle(S.of(context).weekRange52, colorScheme),
           const SizedBox(height: 10),
           _buildRangeBar(
             colorScheme: colorScheme,
@@ -47,9 +48,9 @@ class InfoTab extends StatelessWidget {
           const SizedBox(height: 20),
 
           // Fundamentals
-          _buildSectionTitle('Fundamentals', colorScheme),
+          _buildSectionTitle(S.of(context).fundamentals, colorScheme),
           const SizedBox(height: 10),
-          _buildFundamentalsGrid(colorScheme),
+          _buildFundamentalsGrid(context, colorScheme),
           const SizedBox(height: 80),
         ],
       ),
@@ -67,14 +68,15 @@ class InfoTab extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceGrid(ColorScheme colorScheme) {
+  Widget _buildPriceGrid(BuildContext context, ColorScheme colorScheme) {
+    final s = S.of(context);
     final items = [
-      ('Open', formatKRW(_d('open'))),
-      ('Previous Close', formatKRW(_d('previousClose'))),
-      ('Day High', formatKRW(_d('high'))),
-      ('Day Low', formatKRW(_d('low'))),
-      ('Volume', formatCompact(_d('volume'))),
-      ('Value', formatCompact(_d('value'))),
+      (s.open, formatKRW(_d('open'))),
+      (s.previousClose, formatKRW(_d('previousClose'))),
+      (s.dayHigh, formatKRW(_d('high'))),
+      (s.dayLow, formatKRW(_d('low'))),
+      (s.volume, formatCompact(_d('volume'))),
+      (s.value, formatCompact(_d('value'))),
     ];
 
     return Container(
@@ -175,7 +177,8 @@ class InfoTab extends StatelessWidget {
     );
   }
 
-  Widget _buildFundamentalsGrid(ColorScheme colorScheme) {
+  Widget _buildFundamentalsGrid(BuildContext context, ColorScheme colorScheme) {
+    final s = S.of(context);
     final marketCap = _d('marketCap');
     final per = _d('per');
     final pbr = _d('pbr');
@@ -183,13 +186,13 @@ class InfoTab extends StatelessWidget {
     final divYield = _d('dividendYield');
 
     final items = [
-      if (marketCap > 0) ('Market Cap', '${formatCompact(marketCap)}억'),
-      if (per > 0) ('P/E Ratio', per.toStringAsFixed(2)),
-      if (pbr > 0) ('P/B Ratio', pbr.toStringAsFixed(2)),
-      if (eps != 0) ('EPS', formatKRW(eps)),
-      if (divYield > 0) ('Div Yield', '${divYield.toStringAsFixed(2)}%'),
-      ('52W High', formatKRW(_d('high52w'))),
-      ('52W Low', formatKRW(_d('low52w'))),
+      if (marketCap > 0) (s.marketCap, '${formatCompact(marketCap)}억'),
+      if (per > 0) (s.peRatio, per.toStringAsFixed(2)),
+      if (pbr > 0) (s.pbRatio, pbr.toStringAsFixed(2)),
+      if (eps != 0) (s.eps, formatKRW(eps)),
+      if (divYield > 0) (s.divYield, '${divYield.toStringAsFixed(2)}%'),
+      (s.week52High, formatKRW(_d('high52w'))),
+      (s.week52Low, formatKRW(_d('low52w'))),
     ];
 
     return Container(

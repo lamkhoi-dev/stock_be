@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/theme.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/stock_provider.dart';
 import '../../providers/watchlist_provider.dart';
@@ -139,7 +140,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
         ),
         body: Center(
           child: ErrorRetryWidget(
-            message: 'Failed to load stock data',
+            message: S.of(context).failedLoadStock,
             onRetry: () =>
                 ref.read(stockProvider(widget.symbol).notifier).loadStock(widget.symbol),
           ),
@@ -222,7 +223,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
             if (!auth.isAuthenticated) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('Please login to manage your watchlist'),
+                  content: Text(S.of(context).loginForWatchlist),
                   backgroundColor: colorScheme.surface,
                 ),
               );
@@ -320,19 +321,19 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
         labelColor: colorScheme.primary,
         unselectedLabelColor: colorScheme.secondary,
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        tabs: const [
-          Tab(text: 'Chart'),
-          Tab(text: 'Info'),
+        tabs: [
+          Tab(text: S.of(context).tabChart),
+          Tab(text: S.of(context).tabInfo),
           Tab(
               child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('AI'),
-              SizedBox(width: 4),
-              Text('✨', style: TextStyle(fontSize: 12)),
+              Text(S.of(context).tabAI),
+              const SizedBox(width: 4),
+              const Text('✨', style: TextStyle(fontSize: 12)),
             ],
           )),
-          Tab(text: 'News'),
+          Tab(text: S.of(context).tabNews),
         ],
       ),
     );

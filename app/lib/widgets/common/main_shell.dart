@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../l10n/app_localizations.dart';
+
 /// Main shell with bottom navigation bar — wraps tab screens.
 class MainShell extends StatelessWidget {
   const MainShell({
@@ -29,26 +31,26 @@ class MainShell extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: currentIndex,
           onTap: onTap,
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
+              icon: const Icon(Icons.home_outlined),
+              activeIcon: const Icon(Icons.home),
+              label: S.of(context).navHome,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.search_outlined),
-              activeIcon: Icon(Icons.search),
-              label: 'Search',
+              icon: const Icon(Icons.search_outlined),
+              activeIcon: const Icon(Icons.search),
+              label: S.of(context).navSearch,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.star_outline),
-              activeIcon: Icon(Icons.star),
-              label: 'Watchlist',
+              icon: const Icon(Icons.star_outline),
+              activeIcon: const Icon(Icons.star),
+              label: S.of(context).navWatchlist,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings),
-              label: 'Settings',
+              icon: const Icon(Icons.settings_outlined),
+              activeIcon: const Icon(Icons.settings),
+              label: S.of(context).navSettings,
             ),
           ],
         ),

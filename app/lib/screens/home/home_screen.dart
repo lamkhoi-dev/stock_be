@@ -8,6 +8,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/stock_provider.dart';
 import '../../services/api_client.dart';
 import '../../utils/formatters.dart';
+import '../../l10n/app_localizations.dart';
 import 'widgets/market_status_widget.dart';
 import 'widgets/market_overview_widget.dart';
 import 'widgets/watchlist_preview_widget.dart';
@@ -452,7 +453,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Connecting to server... Retrying in a moment',
+                          S.of(context).homeConnecting,
                           style: TextStyle(
                             color: colorScheme.primary,
                             fontSize: 12,

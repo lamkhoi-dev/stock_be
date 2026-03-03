@@ -6,6 +6,7 @@ import '../../../config/theme.dart';
 import '../../../providers/stock_provider.dart';
 import '../../../services/api_client.dart';
 import '../../../utils/formatters.dart';
+import '../../../l10n/app_localizations.dart';
 import '../../../widgets/common/shimmer_loading.dart';
 
 /// News tab — list of news articles related to this stock.
@@ -67,13 +68,13 @@ class _NewsTabState extends ConsumerState<NewsTab>
                   size: 48, color: colorScheme.onSurface.withValues(alpha: 0.38)),
               const SizedBox(height: 12),
               Text(
-                'No news available',
+                S.of(context).noNewsAvailable,
                 style: TextStyle(color: colorScheme.secondary, fontSize: 14),
               ),
               const SizedBox(height: 12),
               TextButton(
                 onPressed: _refreshNews,
-                child: const Text('Refresh'),
+                child: Text(S.of(context).refresh),
               ),
             ],
           ),

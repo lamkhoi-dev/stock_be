@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import '../../../l10n/app_localizations.dart';
+
 /// Market status header — shows KST time, market open/closed status, KOSPI & KOSDAQ indices.
 class MarketStatusWidget extends StatefulWidget {
   const MarketStatusWidget({
@@ -147,7 +149,7 @@ class _MarketStatusChip extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            isOpen ? 'OPEN' : 'CLOSED',
+            isOpen ? S.of(context).marketOpen : S.of(context).marketClosed,
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,

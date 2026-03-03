@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../services/api_client.dart';
+import '../../l10n/app_localizations.dart';
 import '../../widgets/common/stock_card.dart';
 import '../../widgets/common/shimmer_loading.dart';
 import '../../widgets/common/error_retry_widget.dart';
@@ -57,7 +58,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
         }).toList();
       }
     } catch (e) {
-      _error = 'Failed to load stocks. Please try again.';
+      _error = S.of(context).failedLoadStocks;
     }
     if (mounted) setState(() => _isLoading = false);
   }
@@ -88,7 +89,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
           icon: const Icon(Icons.arrow_back_ios, size: 20),
           onPressed: () => context.pop(),
         ),
-        title: Text('All Stocks${_allStocks.isNotEmpty ? ' (${_allStocks.length})' : ''}'),
+        title: Text('${S.of(context).allStocks}${_allStocks.isNotEmpty ? ' (${_allStocks.length})' : ''}'),
       ),
       body: Column(
         children: [
@@ -100,7 +101,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
             ),
             child: Row(
               children: [
-                _FilterPill(label: 'All', isActive: _selectedMarket == 0, onTap: () {
+                _FilterPill(label: S.of(context).all, isActive: _selectedMarket == 0, onTap: () {
                   setState(() => _selectedMarket = 0);
                   _fetchStocks();
                 }),
@@ -121,9 +122,9 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
                     _fetchStocks();
                   },
                   itemBuilder: (_) => [
-                    const PopupMenuItem(value: 'change', child: Text('Sort: Change %')),
-                    const PopupMenuItem(value: 'volume', child: Text('Sort: Volume')),
-                    const PopupMenuItem(value: 'name', child: Text('Sort: Name')),
+                    PopupMenuItem(value: 'change', child: Text(S.of(context).sortChangePercent)),
+                    PopupMenuItem(value: 'volume', child: Text(S.of(context).sortVolume)),
+                    PopupMenuItem(value: 'name', child: Text(S.of(context).sortName)),
                   ],
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -136,7 +137,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Sort: ${_sortBy == 'change' ? 'Change %' : _sortBy == 'volume' ? 'Volume' : 'Name'}',
+                          _sortBy == 'change' ? S.of(context).sortChangePercent : _sortBy == 'volume' ? S.of(context).sortVolume : S.of(context).sortName,
                           style: TextStyle(fontSize: 12, color: colorScheme.secondary),
                         ),
                         const SizedBox(width: 4),
@@ -161,7 +162,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
                       )
                     : _allStocks.isEmpty
                         ? Center(
-                            child: Text('No stocks found', style: TextStyle(color: colorScheme.secondary)),
+                            child: Text(S.of(context).noStocksFound, style: TextStyle(color: colorScheme.secondary)),
                           )
                         : RefreshIndicator(
                             onRefresh: _fetchStocks,

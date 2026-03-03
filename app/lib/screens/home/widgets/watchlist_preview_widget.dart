@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../config/theme.dart';
 import '../../../widgets/common/company_icon.dart';
 import '../../../widgets/common/exchange_badge.dart';
@@ -39,7 +40,7 @@ class WatchlistPreviewWidget extends StatelessWidget {
                   const Icon(Icons.star, size: 18, color: Color(0xFFF59E0B)),
                   const SizedBox(width: 6),
                   Text(
-                    'Watchlist',
+                    S.of(context).watchlist,
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w600,
@@ -57,7 +58,7 @@ class WatchlistPreviewWidget extends StatelessWidget {
                   }
                 },
                 child: Text(
-                  'See All',
+                  S.of(context).seeAll,
                   style: TextStyle(
                     fontSize: 13,
                     color: colorScheme.primary,
@@ -119,7 +120,7 @@ class WatchlistPreviewWidget extends StatelessWidget {
           Icon(Icons.star_outline, size: 32, color: colorScheme.onSurface.withValues(alpha: 0.38)),
           const SizedBox(height: 12),
           Text(
-            'Login to track your favorite stocks',
+            S.of(context).loginToTrack,
             style: TextStyle(color: colorScheme.secondary, fontSize: 13),
           ),
           const SizedBox(height: 12),
@@ -127,7 +128,7 @@ class WatchlistPreviewWidget extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton(
               onPressed: () => context.push('/auth/login'),
-              child: const Text('Login'),
+              child: Text(S.of(context).login),
             ),
           ),
         ],
@@ -151,7 +152,7 @@ class WatchlistPreviewWidget extends StatelessWidget {
             Icon(Icons.star_outline, size: 32, color: colorScheme.onSurface.withValues(alpha: 0.38)),
             const SizedBox(height: 8),
             Text(
-              'Add stocks to your watchlist',
+              S.of(context).addStocksToWatchlist,
               style: TextStyle(color: colorScheme.secondary, fontSize: 13),
             ),
           ],

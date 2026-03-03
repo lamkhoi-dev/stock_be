@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../l10n/app_localizations.dart';
 import '../../../widgets/common/stock_card.dart';
 import '../../../widgets/common/shimmer_loading.dart';
 
@@ -28,7 +29,7 @@ class MarketOverviewWidget extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Popular Stocks',
+                S.of(context).popularStocks,
                 style: TextStyle(
                   fontSize: 17,
                   fontWeight: FontWeight.w600,
@@ -38,7 +39,7 @@ class MarketOverviewWidget extends StatelessWidget {
               GestureDetector(
                 onTap: () => context.push('/stocks'),
                 child: Text(
-                  'See All',
+                  S.of(context).seeAll,
                   style: TextStyle(
                     fontSize: 13,
                     color: colorScheme.primary,
@@ -64,7 +65,7 @@ class MarketOverviewWidget extends StatelessWidget {
               : stocks.isEmpty
                   ? Center(
                       child: Text(
-                        'No market data available',
+                        S.of(context).noMarketData,
                         style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38)),
                       ),
                     )

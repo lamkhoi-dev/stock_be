@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/api_client.dart';
 import '../../utils/helpers.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Profile Edit Screen — update name, email, password.
 class ProfileEditScreen extends ConsumerStatefulWidget {
@@ -70,7 +71,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           setState(() => _isSaving = false);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(pwResponse.data['message']?.toString() ?? 'Failed to change password'),
+              content: Text(pwResponse.data['message']?.toString() ?? S.of(context).failedChangePassword),
               backgroundColor: const Color(0xFFEF4444),
             ),
           );
@@ -86,8 +87,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         _hasChanges = false;
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
+        SnackBar(
+          content: Text(S.of(context).profileUpdated),
           backgroundColor: Color(0xFF22C55E),
         ),
       );
@@ -110,19 +111,19 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: colorScheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Account', style: TextStyle(color: Color(0xFFEF4444))),
+        title: Text(S.of(context).deleteAccount, style: const TextStyle(color: Color(0xFFEF4444))),
         content: Text(
-          'This action is permanent and cannot be undone. All your data will be deleted.',
+          S.of(context).deleteAccountConfirm,
           style: TextStyle(color: colorScheme.secondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel', style: TextStyle(color: colorScheme.secondary)),
+            child: Text(S.of(context).cancel, style: TextStyle(color: colorScheme.secondary)),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete', style: TextStyle(color: Color(0xFFEF4444))),
+            child: Text(S.of(context).delete, style: const TextStyle(color: Color(0xFFEF4444))),
           ),
         ],
       ),
@@ -142,7 +143,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to delete account: ${e.toString().replaceAll('Exception: ', '')}'),
+          content: Text('${S.of(context).failedDeleteAccount}: ${e.toString().replaceAll('Exception: ', '')}'),
           backgroundColor: const Color(0xFFEF4444),
         ),
       );
@@ -160,7 +161,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
           icon: const Icon(Icons.arrow_back_ios, size: 20),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Edit Profile'),
+        title: Text(S.of(context).editProfile),
         actions: [
           TextButton(
             onPressed: _hasChanges && !_isSaving ? _save : null,
@@ -171,7 +172,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : Text(
-                    'Save',
+                    S.of(context).save,
                     style: TextStyle(
                       color: _hasChanges ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.38),
                       fontWeight: FontWeight.w600,
@@ -233,24 +234,24 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               const SizedBox(height: 24),
 
               // Name
-              _buildLabel('Full Name'),
+              _buildLabel(S.of(context).fullName),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _nameController,
                 validator: validateName,
                 style: TextStyle(color: colorScheme.onSurface),
-                decoration: _inputDecoration('Enter your name'),
+                decoration: _inputDecoration(S.of(context).enterYourName),
               ),
               const SizedBox(height: 18),
 
               // Email (read-only for now)
-              _buildLabel('Email'),
+              _buildLabel(S.of(context).email),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _emailController,
                 readOnly: true,
                 style: TextStyle(color: colorScheme.secondary),
-                decoration: _inputDecoration('Email cannot be changed').copyWith(
+                decoration: _inputDecoration(S.of(context).emailCannotChange).copyWith(
                   filled: true,
                   fillColor: const Color(0xFF0D0F19),
                 ),
@@ -260,14 +261,14 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
               // Change Password Section
               Divider(color: colorScheme.outline),
               const SizedBox(height: 16),
-              _buildLabel('Change Password'),
+              _buildLabel(S.of(context).changePassword),
               const SizedBox(height: 12),
 
               TextFormField(
                 controller: _currentPasswordController,
                 obscureText: _obscureCurrentPassword,
                 style: TextStyle(color: colorScheme.onSurface),
-                decoration: _inputDecoration('Current password').copyWith(
+                decoration: _inputDecoration(S.of(context).currentPassword).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureCurrentPassword ? Icons.visibility_off : Icons.visibility,
@@ -285,11 +286,11 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 style: TextStyle(color: colorScheme.onSurface),
                 validator: (v) {
                   if (v != null && v.isNotEmpty && v.length < 8) {
-                    return 'Password must be at least 8 characters';
+                    return S.of(context).passwordMinChars;
                   }
                   return null;
                 },
-                decoration: _inputDecoration('New password (min 8 chars)').copyWith(
+                decoration: _inputDecoration(S.of(context).newPassword).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureNewPassword ? Icons.visibility_off : Icons.visibility,
@@ -313,13 +314,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Danger Zone',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFEF4444)),
+                    Text(
+                      S.of(context).dangerZone,
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFEF4444)),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Permanently delete your account and all associated data.',
+                      S.of(context).deleteAccountDesc,
                       style: TextStyle(fontSize: 12, color: colorScheme.secondary),
                     ),
                     const SizedBox(height: 12),
@@ -329,7 +330,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                         side: const BorderSide(color: Color(0xFFEF4444)),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      child: const Text('Delete Account', style: TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
+                      child: Text(S.of(context).deleteAccount, style: const TextStyle(color: Color(0xFFEF4444), fontSize: 13)),
                     ),
                   ],
                 ),

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/websocket_provider.dart';
 import '../../utils/helpers.dart';
+import '../../l10n/app_localizations.dart';
 
 /// Login screen — STITCH design with email/password, social login, branding.
 class LoginScreen extends ConsumerStatefulWidget {
@@ -93,7 +94,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 24),
                     Text(
-                      'KRX Analysis',
+                      S.of(context).appName,
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -102,7 +103,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Korean Stock AI Analysis',
+                      S.of(context).appTagline,
                       style: TextStyle(fontSize: 14, color: colorScheme.secondary),
                     ),
                     const SizedBox(height: 40),
@@ -112,9 +113,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: validateEmail,
-                      decoration: const InputDecoration(
-                        hintText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined, size: 20),
+                      decoration: InputDecoration(
+                        hintText: S.of(context).loginEmail,
+                        prefixIcon: const Icon(Icons.email_outlined, size: 20),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -126,7 +127,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       validator: validatePassword,
                       onFieldSubmitted: (_) => _handleLogin(),
                       decoration: InputDecoration(
-                        hintText: 'Password',
+                        hintText: S.of(context).loginPassword,
                         prefixIcon: const Icon(Icons.lock_outlined, size: 20),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -144,7 +145,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: TextButton(
                         onPressed: () => context.push('/auth/forgot'),
                         child: Text(
-                          'Forgot password?',
+                          S.of(context).loginForgot,
                           style: TextStyle(color: colorScheme.primary, fontSize: 13),
                         ),
                       ),
@@ -179,7 +180,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 height: 22,
                                 child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                               )
-                            : const Text('Login', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                            : Text(S.of(context).loginButton, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                       ),
                     ),
                     const SizedBox(height: 24),
@@ -189,7 +190,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         Expanded(child: Divider(color: colorScheme.outline)),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text('or', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38), fontSize: 13)),
+                          child: Text(S.of(context).or, style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.38), fontSize: 13)),
                         ),
                         Expanded(child: Divider(color: colorScheme.outline)),
                       ],
@@ -202,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       child: OutlinedButton.icon(
                         onPressed: () {/* Phase 7 */},
                         icon: const Text('G', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-                        label: const Text('Continue with Google'),
+                        label: Text(S.of(context).loginGoogle),
                       ),
                     ),
                     const Spacer(flex: 2),
@@ -211,13 +212,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          S.of(context).loginNoAccount,
                           style: TextStyle(color: colorScheme.secondary, fontSize: 14),
                         ),
                         GestureDetector(
                           onTap: () => context.push('/auth/register'),
                         child: Text(
-                          'Sign up',
+                          S.of(context).loginSignUp,
                           style: TextStyle(
                             color: colorScheme.primary,
                               fontSize: 14,
