@@ -149,6 +149,8 @@ const translationsKo = <String, String>{
 
   // AI Tab
   'freePlan': '무료 플랜',
+  'proPlan': '프로 플랜',
+  'proUnlimited': '무제한 분석',
   'signInForAI': 'AI 분석을 위해 로그인하세요',
   'analysesRemaining': '오늘 {remaining} / {limit} 기본 분석 남음',
   'freeAnalysesPerDay': '매일 {limit}회 무료 기본 분석',

@@ -52,6 +52,7 @@ class AINotifier extends StateNotifier<AIState> {
             remaining: data['basic']?['dailyRemaining'] ?? 0,
             dailyLimit: data['basic']?['dailyLimit'] ?? 3,
             totalUsed: data['stats']?['totalAnalyses'] ?? 0,
+            plan: data['plan'] ?? 'free',
           ),
         );
       }

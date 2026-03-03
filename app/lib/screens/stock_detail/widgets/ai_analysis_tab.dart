@@ -167,6 +167,7 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
   Widget _buildCreditsInfo(AuthState authState, AIState aiState, S s) {
     final cs = Theme.of(context).colorScheme;
     final credits = aiState.credits;
+    final isPro = credits?.plan == 'pro';
     final remaining = credits?.remaining ?? 0;
     final limit = credits?.dailyLimit ?? 3;
 
@@ -182,10 +183,15 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: cs.primary.withValues(alpha: 0.15),
+              color: (isPro ? const Color(0xFFF59E0B) : cs.primary)
+                  .withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(Icons.auto_awesome, size: 18, color: cs.primary),
+            child: Icon(
+              isPro ? Icons.workspace_premium : Icons.auto_awesome,
+              size: 18,
+              color: isPro ? const Color(0xFFF59E0B) : cs.primary,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -193,7 +199,9 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  authState.isAuthenticated ? s.freePlan : s.signInForAI,
+                  authState.isAuthenticated
+                      ? (isPro ? s.proPlan : s.freePlan)
+                      : s.signInForAI,
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -203,7 +211,9 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
                 const SizedBox(height: 2),
                 Text(
                   authState.isAuthenticated
-                      ? s.analysesRemaining(remaining, limit)
+                      ? (isPro
+                          ? s.proUnlimited
+                          : s.analysesRemaining(remaining, limit))
                       : s.freeAnalysesPerDay(limit),
                   style: TextStyle(fontSize: 11, color: cs.secondary),
                 ),
@@ -215,11 +225,14 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
               padding:
                   const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                color: (isPro
+                        ? const Color(0xFFF59E0B)
+                        : const Color(0xFFF59E0B))
+                    .withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                s.remainingCredits(remaining),
+                isPro ? 'PRO' : s.remainingCredits(remaining),
                 style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,

@@ -37,36 +37,47 @@ import {
 
 // ─── Token Management ────────────────────────────────
 let kisToken = { token: '', expiresAt: 0 };
+let _tokenPromise = null; // Mutex: prevent parallel token refreshes
 
 /**
  * Get or refresh KIS OAuth2 access token.
  * Cached for ~24h, refreshes 1h before expiry.
+ * Uses a mutex so parallel callers share one refresh request.
  */
 async function getToken() {
   if (kisToken.token && Date.now() < kisToken.expiresAt - 3_600_000) {
     return kisToken.token;
   }
 
-  try {
-    const { data } = await axios.post(
-      `${env.KIS_BASE_URL}/oauth2/tokenP`,
-      {
-        grant_type: 'client_credentials',
-        appkey: env.KIS_APP_KEY,
-        appsecret: env.KIS_APP_SECRET,
-      },
-      { headers: { 'Content-Type': 'application/json' }, timeout: 10_000 },
-    );
+  // If another call is already refreshing, wait for it
+  if (_tokenPromise) return _tokenPromise;
 
-    kisToken.token = data.access_token;
-    kisToken.expiresAt = Date.now() + (data.expires_in ? data.expires_in * 1000 : 23 * 3_600_000);
-    logger.info(`KIS token refreshed, expires: ${new Date(kisToken.expiresAt).toISOString()}`);
-    return kisToken.token;
-  } catch (err) {
-    const msg = err.response?.data?.msg1 || err.message;
-    logger.error(`KIS token error: ${msg}`);
-    throw new Error(`KIS token failed: ${msg}`);
-  }
+  _tokenPromise = (async () => {
+    try {
+      const { data } = await axios.post(
+        `${env.KIS_BASE_URL}/oauth2/tokenP`,
+        {
+          grant_type: 'client_credentials',
+          appkey: env.KIS_APP_KEY,
+          appsecret: env.KIS_APP_SECRET,
+        },
+        { headers: { 'Content-Type': 'application/json' }, timeout: 10_000 },
+      );
+
+      kisToken.token = data.access_token;
+      kisToken.expiresAt = Date.now() + (data.expires_in ? data.expires_in * 1000 : 23 * 3_600_000);
+      logger.info(`KIS token refreshed, expires: ${new Date(kisToken.expiresAt).toISOString()}`);
+      return kisToken.token;
+    } catch (err) {
+      const msg = err.response?.data?.msg1 || err.message;
+      logger.error(`KIS token error: ${msg}`);
+      throw new Error(`KIS token failed: ${msg}`);
+    } finally {
+      _tokenPromise = null;
+    }
+  })();
+
+  return _tokenPromise;
 }
 
 // ─── Request Helpers ─────────────────────────────────

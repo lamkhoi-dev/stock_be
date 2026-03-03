@@ -72,7 +72,7 @@ const userSchema = new mongoose.Schema({
     plan: {
       type: String,
       enum: ['free', 'pro'],
-      default: 'free',
+      default: 'pro', // TODO: change back to 'free' for production
     },
     credits: {
       type: Number,

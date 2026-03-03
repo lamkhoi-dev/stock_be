@@ -151,6 +151,8 @@ const translationsEn = <String, String>{
 
   // AI Tab
   'freePlan': 'Free Plan',
+  'proPlan': 'Pro Plan',
+  'proUnlimited': 'Unlimited analyses',
   'signInForAI': 'Sign in for AI Analysis',
   'analysesRemaining': '{remaining} / {limit} basic analyses remaining today',
   'freeAnalysesPerDay': 'Get {limit} free basic analyses per day',

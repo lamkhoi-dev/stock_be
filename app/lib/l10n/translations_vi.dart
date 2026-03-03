@@ -149,6 +149,8 @@ const translationsVi = <String, String>{
 
   // AI Tab
   'freePlan': 'Gói miễn phí',
+  'proPlan': 'Gói Pro',
+  'proUnlimited': 'Phân tích không giới hạn',
   'signInForAI': 'Đăng nhập để phân tích AI',
   'analysesRemaining': 'Còn {remaining} / {limit} lượt phân tích cơ bản hôm nay',
   'freeAnalysesPerDay': '{limit} lượt phân tích cơ bản miễn phí mỗi ngày',

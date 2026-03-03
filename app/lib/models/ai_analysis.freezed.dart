@@ -861,6 +861,7 @@ mixin _$AICredits {
   int get remaining => throw _privateConstructorUsedError;
   int get dailyLimit => throw _privateConstructorUsedError;
   int get totalUsed => throw _privateConstructorUsedError;
+  String get plan => throw _privateConstructorUsedError;
   DateTime? get resetsAt => throw _privateConstructorUsedError;
 
   /// Serializes this AICredits to a JSON map.
@@ -878,7 +879,12 @@ abstract class $AICreditsCopyWith<$Res> {
   factory $AICreditsCopyWith(AICredits value, $Res Function(AICredits) then) =
       _$AICreditsCopyWithImpl<$Res, AICredits>;
   @useResult
-  $Res call({int remaining, int dailyLimit, int totalUsed, DateTime? resetsAt});
+  $Res call(
+      {int remaining,
+      int dailyLimit,
+      int totalUsed,
+      String plan,
+      DateTime? resetsAt});
 }
 
 /// @nodoc
@@ -899,6 +905,7 @@ class _$AICreditsCopyWithImpl<$Res, $Val extends AICredits>
     Object? remaining = null,
     Object? dailyLimit = null,
     Object? totalUsed = null,
+    Object? plan = null,
     Object? resetsAt = freezed,
   }) {
     return _then(_value.copyWith(
@@ -914,6 +921,10 @@ class _$AICreditsCopyWithImpl<$Res, $Val extends AICredits>
           ? _value.totalUsed
           : totalUsed // ignore: cast_nullable_to_non_nullable
               as int,
+      plan: null == plan
+          ? _value.plan
+          : plan // ignore: cast_nullable_to_non_nullable
+              as String,
       resetsAt: freezed == resetsAt
           ? _value.resetsAt
           : resetsAt // ignore: cast_nullable_to_non_nullable
@@ -930,7 +941,12 @@ abstract class _$$AICreditsImplCopyWith<$Res>
       __$$AICreditsImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int remaining, int dailyLimit, int totalUsed, DateTime? resetsAt});
+  $Res call(
+      {int remaining,
+      int dailyLimit,
+      int totalUsed,
+      String plan,
+      DateTime? resetsAt});
 }
 
 /// @nodoc
@@ -949,6 +965,7 @@ class __$$AICreditsImplCopyWithImpl<$Res>
     Object? remaining = null,
     Object? dailyLimit = null,
     Object? totalUsed = null,
+    Object? plan = null,
     Object? resetsAt = freezed,
   }) {
     return _then(_$AICreditsImpl(
@@ -964,6 +981,10 @@ class __$$AICreditsImplCopyWithImpl<$Res>
           ? _value.totalUsed
           : totalUsed // ignore: cast_nullable_to_non_nullable
               as int,
+      plan: null == plan
+          ? _value.plan
+          : plan // ignore: cast_nullable_to_non_nullable
+              as String,
       resetsAt: freezed == resetsAt
           ? _value.resetsAt
           : resetsAt // ignore: cast_nullable_to_non_nullable
@@ -979,6 +1000,7 @@ class _$AICreditsImpl implements _AICredits {
       {this.remaining = 3,
       this.dailyLimit = 3,
       this.totalUsed = 0,
+      this.plan = 'free',
       this.resetsAt});
 
   factory _$AICreditsImpl.fromJson(Map<String, dynamic> json) =>
@@ -994,11 +1016,14 @@ class _$AICreditsImpl implements _AICredits {
   @JsonKey()
   final int totalUsed;
   @override
+  @JsonKey()
+  final String plan;
+  @override
   final DateTime? resetsAt;
 
   @override
   String toString() {
-    return 'AICredits(remaining: $remaining, dailyLimit: $dailyLimit, totalUsed: $totalUsed, resetsAt: $resetsAt)';
+    return 'AICredits(remaining: $remaining, dailyLimit: $dailyLimit, totalUsed: $totalUsed, plan: $plan, resetsAt: $resetsAt)';
   }
 
   @override
@@ -1012,14 +1037,15 @@ class _$AICreditsImpl implements _AICredits {
                 other.dailyLimit == dailyLimit) &&
             (identical(other.totalUsed, totalUsed) ||
                 other.totalUsed == totalUsed) &&
+            (identical(other.plan, plan) || other.plan == plan) &&
             (identical(other.resetsAt, resetsAt) ||
                 other.resetsAt == resetsAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, remaining, dailyLimit, totalUsed, resetsAt);
+  int get hashCode => Object.hash(
+      runtimeType, remaining, dailyLimit, totalUsed, plan, resetsAt);
 
   /// Create a copy of AICredits
   /// with the given fields replaced by the non-null parameter values.
@@ -1042,6 +1068,7 @@ abstract class _AICredits implements AICredits {
       {final int remaining,
       final int dailyLimit,
       final int totalUsed,
+      final String plan,
       final DateTime? resetsAt}) = _$AICreditsImpl;
 
   factory _AICredits.fromJson(Map<String, dynamic> json) =
@@ -1053,6 +1080,8 @@ abstract class _AICredits implements AICredits {
   int get dailyLimit;
   @override
   int get totalUsed;
+  @override
+  String get plan;
   @override
   DateTime? get resetsAt;
 

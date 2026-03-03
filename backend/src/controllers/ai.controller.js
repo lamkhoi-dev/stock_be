@@ -60,7 +60,7 @@ const aiController = {
         tokensUsed: result.tokensUsed,
       });
 
-      // Deduct credits if applicable
+      // Deduct credits if applicable (free plan basic = daily count)
       if (level === 'basic' && user.subscription.plan === 'free') {
         // Reset counter if new day
         const now = new Date();
@@ -71,10 +71,8 @@ const aiController = {
         }
         user.subscription.aiCreditsUsedToday += 1;
         await user.save();
-      } else if (level === 'pro') {
-        user.subscription.credits = (user.subscription.credits || 0) - result.creditsUsed;
-        await user.save();
       }
+      // Pro plan = unlimited, no credit deduction needed
 
       logger.info(`AI analysis: ${result.level} for ${result.symbol} by ${user.email} (${result.processingTimeMs}ms)`);
 
@@ -173,25 +171,18 @@ const aiController = {
       const credits = {
         plan,
         basic: {
-          dailyLimit: plan === 'pro' ? Infinity : 3,
-          dailyUsed,
-          dailyRemaining: plan === 'pro' ? Infinity : Math.max(0, 3 - dailyUsed),
+          dailyLimit: plan === 'pro' ? 999 : 3,
+          dailyUsed: plan === 'pro' ? 0 : dailyUsed,
+          dailyRemaining: plan === 'pro' ? 999 : Math.max(0, 3 - dailyUsed),
         },
         pro: {
-          credits: user.subscription?.credits || 0,
-          costGemini: 10,
-          costOpenAI: 20,
-          lowCreditWarning: (user.subscription?.credits || 0) < 50,
+          unlimited: plan === 'pro',
+          credits: plan === 'pro' ? 999 : 0,
         },
         stats: {
           totalAnalyses,
           todayAnalyses,
         },
-        packages: [
-          { credits: 100, price: 1000, currency: 'KRW', label: '100 Credits' },
-          { credits: 500, price: 5000, currency: 'KRW', label: '500 Credits' },
-          { credits: 2000, price: 15000, currency: 'KRW', label: '2000 Credits' },
-        ],
       };
 
       res.json({ success: true, data: credits });

@@ -22,6 +22,32 @@ import cacheService from './cache.service.js';
 import logger from '../utils/logger.js';
 import { stripSymbolSuffix } from '../utils/helpers.js';
 
+// ─── Retry Helper ────────────────────────────────────
+
+/**
+ * Retry an async function with exponential backoff.
+ * @param {Function} fn - Async function to retry
+ * @param {number} [maxRetries=2] - Max retry attempts (total calls = maxRetries + 1)
+ * @param {number} [baseDelay=1000] - Base delay in ms before first retry
+ * @returns {Promise<*>}
+ */
+async function withRetry(fn, maxRetries = 2, baseDelay = 1000) {
+  let lastError;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxRetries) {
+        const delay = baseDelay * Math.pow(2, attempt);
+        logger.warn(`Retry ${attempt + 1}/${maxRetries} after ${delay}ms: ${err.message}`);
+        await new Promise(r => setTimeout(r, delay));
+      }
+    }
+  }
+  throw lastError;
+}
+
 // ─── AI Client Initialization ────────────────────────
 
 let geminiClient = null;
@@ -47,7 +73,7 @@ function getGroq() {
 // ─── Prompt Templates ────────────────────────────────
 
 function buildBasicPrompt(symbol, stockData, indicators) {
-  return `You are a Korean stock market analyst AI. Analyze the following stock data and provide a structured terminal-style analysis in Korean.
+  return `You are a Korean stock market analyst AI. Analyze the following stock data and provide a structured terminal-style analysis in English.
 
 Stock: ${symbol} (${stockData.name || symbol})
 Current Price: ₩${stockData.price?.toLocaleString()}
@@ -68,19 +94,19 @@ Technical Indicators:
 - Bollinger Band Position: ${indicators.bollingerBands?.position}% (Lower: ₩${indicators.bollingerBands?.lower?.toLocaleString()}, Upper: ₩${indicators.bollingerBands?.upper?.toLocaleString()})
 - Overall Signal: ${indicators.summary?.overall}
 
-Provide your analysis in the following JSON format (respond ONLY with valid JSON, no markdown):
+Provide your analysis in the following JSON format (respond ONLY with valid JSON, no markdown). ALL text values MUST be in English:
 {
   "signal": "strong_buy|buy|hold|sell|strong_sell",
   "confidence": <number 0-100>,
   "sceScore": <number 0-100, Stock Comprehensive Evaluation score based on technical + fundamental factors>,
-  "marketSentiment": "<1-2 word sentiment label in Korean, e.g. 낙관적, 비관적, 중립>",
-  "actionStrategy": "<action recommendation in Korean, e.g. 매수 (적극 매수), 매도, 관망 + brief strategy detail>",
-  "investmentTiming": "<specific entry/exit timing advice in Korean, 2-3 sentences>",
-  "futureForecast": "<short-term price forecast in Korean with target price ranges, 2-3 sentences>",
-  "strategy": "<detailed trading strategy in Korean, 3-5 sentences covering entry points, position sizing, stop-loss>",
-  "risk": "<risk assessment in Korean, 3-5 sentences covering key risk factors and mitigation>",
-  "trend": "<trend analysis in Korean, 3-5 sentences covering current trend, momentum, support/resistance levels>",
-  "summary": "<executive summary paragraph in Korean, 3-5 sentences>"
+  "marketSentiment": "<1-2 word sentiment label in English, e.g. Bullish, Bearish, Neutral, Cautious>",
+  "actionStrategy": "<action recommendation in English, e.g. Buy - technical indicators turning bullish, or Hold - wait for confirmation>",
+  "investmentTiming": "<specific entry/exit timing advice in English, 2-3 sentences>",
+  "futureForecast": "<short-term price forecast in English with target price ranges, 2-3 sentences>",
+  "strategy": "<detailed trading strategy in English, 3-5 sentences covering entry points, position sizing, stop-loss>",
+  "risk": "<risk assessment in English, 3-5 sentences covering key risk factors and mitigation>",
+  "trend": "<trend analysis in English, 3-5 sentences covering current trend, momentum, support/resistance levels>",
+  "summary": "<executive summary paragraph in English, 3-5 sentences>"
 }`;
 }
 
@@ -89,7 +115,7 @@ function buildProPrompt(symbol, stockData, indicators, historyBars) {
     `${b.time}: O=${b.open} H=${b.high} L=${b.low} C=${b.close} V=${b.volume}`
   ).join('\n');
 
-  return `You are an expert Korean stock market analyst AI. Provide a comprehensive professional analysis in Korean.
+  return `You are an expert Korean stock market analyst AI. Provide a comprehensive professional analysis in English.
 
 ═══ Stock Information ═══
 Stock: ${symbol} (${stockData.name || symbol})
@@ -113,19 +139,19 @@ Overall Signal: ${indicators.summary?.overall} (Score: ${indicators.summary?.sco
 ═══ Recent 30-Day OHLCV ═══
 ${recentBars}
 
-Provide a DETAILED professional analysis in the following JSON format (respond ONLY with valid JSON, no markdown):
+Provide a DETAILED professional analysis in the following JSON format (respond ONLY with valid JSON, no markdown). ALL text values MUST be in English:
 {
   "signal": "strong_buy|buy|hold|sell|strong_sell",
   "confidence": <number 0-100>,
   "sceScore": <number 0-100, Stock Comprehensive Evaluation score based on technical + fundamental + momentum factors>,
-  "marketSentiment": "<1-2 word sentiment label in Korean, e.g. 매우 낙관적, 비관적, 중립>",
-  "actionStrategy": "<specific action recommendation in Korean with brief detail, e.g. 적극 매수 - 기술적 지표 상승 전환>",
-  "investmentTiming": "<investment timing advice in Korean, 2-3 sentences with specific entry/exit points>",
-  "futureForecast": "<short/mid-term forecast in Korean with price targets, 2-3 sentences>",
-  "strategy": "<detailed trading strategy in Korean, 5-8 sentences covering entry points, position sizing, stop-loss, take-profit levels>",
-  "risk": "<comprehensive risk assessment in Korean, 5-8 sentences covering market risk, sector risk, company-specific risk, mitigation strategies>",
-  "trend": "<detailed trend analysis in Korean, 5-8 sentences covering current trend direction, momentum strength, volume confirmation, support/resistance levels, MA crossovers, chart patterns>",
-  "summary": "<executive summary in Korean, 4-6 sentences covering overall assessment>",
+  "marketSentiment": "<1-2 word sentiment label in English, e.g. Very Bullish, Bearish, Neutral, Cautious>",
+  "actionStrategy": "<specific action recommendation in English with brief detail, e.g. Strong Buy - technical indicators turning bullish>",
+  "investmentTiming": "<investment timing advice in English, 2-3 sentences with specific entry/exit points>",
+  "futureForecast": "<short/mid-term forecast in English with price targets, 2-3 sentences>",
+  "strategy": "<detailed trading strategy in English, 5-8 sentences covering entry points, position sizing, stop-loss, take-profit levels>",
+  "risk": "<comprehensive risk assessment in English, 5-8 sentences covering market risk, sector risk, company-specific risk, mitigation strategies>",
+  "trend": "<detailed trend analysis in English, 5-8 sentences covering current trend direction, momentum strength, volume confirmation, support/resistance levels, MA crossovers, chart patterns>",
+  "summary": "<executive summary in English, 4-6 sentences covering overall assessment>",
   "keyLevels": {
     "support": [<support level 1>, <support level 2>],
     "resistance": [<resistance level 1>, <resistance level 2>]
@@ -134,7 +160,7 @@ Provide a DETAILED professional analysis in the following JSON format (respond O
     "upside": <target price if bullish>,
     "downside": <target price if bearish>
   },
-  "timeframe": "<recommended investment timeframe in Korean>"
+  "timeframe": "<recommended investment timeframe in English>"
 }`;
 }
 
@@ -146,27 +172,26 @@ Provide a DETAILED professional analysis in the following JSON format (respond O
  * @returns {Promise<Object>} Analysis result
  */
 async function analyzeBasic(symbol) {
-  const startTime = Date.now();
-  const code = stripSymbolSuffix(symbol);
+  return withRetry(async () => {
+    const startTime = Date.now();
+    const code = stripSymbolSuffix(symbol);
 
-  // Fetch stock data and indicators in parallel
-  const [priceResult, indicatorResult] = await Promise.all([
-    kisService.getPrice(code),
-    indicatorsService.getAll(code),
-  ]);
+    // Fetch stock data and indicators (sequential to avoid KIS rate limit issues)
+    const priceResult = await kisService.getPrice(code);
+    const indicatorResult = await indicatorsService.getAll(code);
 
-  const stockData = priceResult.data;
-  const indicators = indicatorResult.data;
-  const prompt = buildBasicPrompt(code, stockData, indicators);
+    const stockData = priceResult.data;
+    const indicators = indicatorResult.data;
+    const prompt = buildBasicPrompt(code, stockData, indicators);
 
-  let analysisText;
-  let modelUsed = 'gemini';
-  let tokensUsed = 0;
+    let analysisText;
+    let modelUsed = 'gemini';
+    let tokensUsed = 0;
 
-  // Try Gemini Flash first
-  const gemini = getGemini();
-  if (gemini) {
-    try {
+    // Try Gemini Flash first
+    const gemini = getGemini();
+    if (gemini) {
+      try {
       const model = gemini.getGenerativeModel({ model: 'gemini-2.0-flash' });
       const result = await model.generateContent(prompt);
       const response = result.response;
@@ -240,6 +265,7 @@ async function analyzeBasic(symbol) {
     tokensUsed,
     creditsUsed: 0, // Basic = free
   };
+  }, 2, 1500); // retry up to 2 times, 1.5s base delay
 }
 
 /**
@@ -249,15 +275,14 @@ async function analyzeBasic(symbol) {
  * @returns {Promise<Object>} Detailed analysis
  */
 async function analyzePro(symbol, preferredModel = 'gemini') {
-  const startTime = Date.now();
-  const code = stripSymbolSuffix(symbol);
+  return withRetry(async () => {
+    const startTime = Date.now();
+    const code = stripSymbolSuffix(symbol);
 
-  // Fetch comprehensive data
-  const [priceResult, indicatorResult, chartResult] = await Promise.all([
-    kisService.getPrice(code),
-    indicatorsService.getAll(code),
-    kisService.getDailyChart(code, { period: 'D' }),
-  ]);
+    // Fetch comprehensive data (sequential to avoid KIS rate limit issues)
+    const priceResult = await kisService.getPrice(code);
+    const indicatorResult = await indicatorsService.getAll(code);
+    const chartResult = await kisService.getDailyChart(code, { period: 'D' });
 
   const stockData = priceResult.data;
   const indicators = indicatorResult.data;
@@ -354,6 +379,7 @@ async function analyzePro(symbol, preferredModel = 'gemini') {
     tokensUsed,
     creditsUsed,
   };
+  }, 2, 1500); // retry up to 2 times, 1.5s base delay
 }
 
 // ─── Response Parser ─────────────────────────────────
@@ -425,32 +451,21 @@ function checkCredits(user, level, model = 'gemini') {
     return { allowed: true, creditsNeeded: 0, creditsRemaining: remaining - 1 };
   }
 
-  // Pro analysis
+  // Pro analysis — requires pro plan, but unlimited (no credit deduction)
   if (plan !== 'pro') {
     return {
       allowed: false,
       reason: 'Pro analysis requires Pro subscription.',
-      creditsNeeded: model === 'openai' ? 20 : 10,
+      creditsNeeded: 0,
       creditsRemaining: 0,
     };
   }
 
-  const creditsNeeded = 10; // Both Gemini and Groq = 10 credits
-  const currentCredits = user.subscription?.credits || 0;
-
-  if (currentCredits < creditsNeeded) {
-    return {
-      allowed: false,
-      reason: `Insufficient credits. Need ${creditsNeeded}, have ${currentCredits}.`,
-      creditsNeeded,
-      creditsRemaining: currentCredits,
-    };
-  }
-
+  // Pro plan = unlimited pro analysis
   return {
     allowed: true,
-    creditsNeeded,
-    creditsRemaining: currentCredits - creditsNeeded,
+    creditsNeeded: 0,
+    creditsRemaining: Infinity,
   };
 }
 

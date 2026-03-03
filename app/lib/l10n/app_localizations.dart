@@ -178,8 +178,8 @@ class S {
   String get week52Low => _get('week52Low');
 
   // ─── AI Tab ──────────────────────────────────────
-  String get freePlan => _get('freePlan');
-  String get signInForAI => _get('signInForAI');
+  String get freePlan => _get('freePlan');  String get proPlan => _get('proPlan');
+  String get proUnlimited => _get('proUnlimited');  String get signInForAI => _get('signInForAI');
   String analysesRemaining(int remaining, int limit) => _get('analysesRemaining')
       .replaceAll('{remaining}', '$remaining')
       .replaceAll('{limit}', '$limit');

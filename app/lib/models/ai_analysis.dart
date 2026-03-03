@@ -58,6 +58,7 @@ class AICredits with _$AICredits {
     @Default(3) int remaining,
     @Default(3) int dailyLimit,
     @Default(0) int totalUsed,
+    @Default('free') String plan,
     DateTime? resetsAt,
   }) = _AICredits;
 

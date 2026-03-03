@@ -84,6 +84,7 @@ _$AICreditsImpl _$$AICreditsImplFromJson(Map<String, dynamic> json) =>
       remaining: (json['remaining'] as num?)?.toInt() ?? 3,
       dailyLimit: (json['dailyLimit'] as num?)?.toInt() ?? 3,
       totalUsed: (json['totalUsed'] as num?)?.toInt() ?? 0,
+      plan: json['plan'] as String? ?? 'free',
       resetsAt: json['resetsAt'] == null
           ? null
           : DateTime.parse(json['resetsAt'] as String),
@@ -94,5 +95,6 @@ Map<String, dynamic> _$$AICreditsImplToJson(_$AICreditsImpl instance) =>
       'remaining': instance.remaining,
       'dailyLimit': instance.dailyLimit,
       'totalUsed': instance.totalUsed,
+      'plan': instance.plan,
       'resetsAt': instance.resetsAt?.toIso8601String(),
     };
