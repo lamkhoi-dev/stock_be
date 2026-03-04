@@ -73,7 +73,7 @@ const translationsEn = <String, String>{
   'marketClosed': 'CLOSED',
 
   // Search
-  'searchStocks': 'Search stocks...',
+  'searchStocks': 'Name, code, or symbol...',
   'recentSearches': 'Recent Searches',
   'clear': 'Clear',
   'noResults': 'No results for "{query}"',

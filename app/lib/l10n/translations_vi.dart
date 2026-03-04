@@ -72,7 +72,7 @@ const translationsVi = <String, String>{
   'marketClosed': 'ĐÓNG CỬA',
 
   // Search
-  'searchStocks': 'Tìm cổ phiếu...',
+  'searchStocks': 'Tên, mã cổ phiếu...',
   'recentSearches': 'Tìm kiếm gần đây',
   'clear': 'Xóa',
   'noResults': 'Không tìm thấy kết quả cho "{query}"',

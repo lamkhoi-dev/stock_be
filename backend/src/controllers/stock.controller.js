@@ -6,6 +6,7 @@
 import kisService from '../services/kis.service.js';
 import yahooService from '../services/yahoo.service.js';
 import indicatorsService from '../services/indicators.service.js';
+import stockSearchService from '../services/stock-search.service.js';
 import cacheService from '../services/cache.service.js';
 import logger from '../utils/logger.js';
 
@@ -293,12 +294,12 @@ export const getMarketOverview = withFallback(
 
 /**
  * GET /api/stocks/search?q=samsung
- * Symbol search (Yahoo Finance — KIS has no search endpoint)
+ * Hybrid search: local KRX dictionary (Korean/English/code) + Yahoo fallback
  */
 export const searchStocks = async (req, res, next) => {
   try {
-    const result = await yahooService.search(req.query.q);
-    res.json({ success: true, ...result, source: 'yahoo' });
+    const result = await stockSearchService.searchHybrid(req.query.q, yahooService);
+    res.json({ success: true, ...result });
   } catch (err) {
     next(err);
   }

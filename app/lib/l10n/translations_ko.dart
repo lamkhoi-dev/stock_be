@@ -72,7 +72,7 @@ const translationsKo = <String, String>{
   'marketClosed': '장마감',
 
   // Search
-  'searchStocks': '종목 검색...',
+  'searchStocks': '종목명, 코드 검색...',
   'recentSearches': '최근 검색',
   'clear': '지우기',
   'noResults': '"{query}" 검색 결과 없음',

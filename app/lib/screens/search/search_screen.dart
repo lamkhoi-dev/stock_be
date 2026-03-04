@@ -94,6 +94,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           items = data;
         } else if (data is Map && data['results'] is List) {
           items = data['results'] as List;
+        } else if (data is Map && data['quotes'] is List) {
+          items = data['quotes'] as List;
         } else {
           items = [];
         }
@@ -101,21 +103,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         setState(() {
           _results = items.map((s) {
             final item = s as Map<String, dynamic>;
-            // Map Yahoo search results to our format
+            // New hybrid format: { symbol, nameKo, nameEn, exchange }
+            // Also handle legacy Yahoo format as fallback
             String symbol = item['symbol'] ?? '';
-            String exchange = 'KOSPI';
-            // Yahoo returns symbols like 005930.KS (KOSPI) or 263750.KQ (KOSDAQ)
+            String exchange = item['exchange'] ?? 'KOSPI';
+            // Strip .KS/.KQ suffix if present (Yahoo format)
             if (symbol.endsWith('.KQ')) {
               exchange = 'KOSDAQ';
               symbol = symbol.replaceAll('.KQ', '');
             } else if (symbol.endsWith('.KS')) {
+              exchange = 'KOSPI';
               symbol = symbol.replaceAll('.KS', '');
             }
             return <String, dynamic>{
               'symbol': symbol,
-              'nameKo': item['shortname'] ?? item['name'] ?? item['nameKo'] ?? '',
-              'nameEn': item['longname'] ?? item['shortname'] ?? item['nameEn'] ?? item['name'] ?? '',
-              'exchange': item['exchange'] ?? exchange,
+              'nameKo': item['nameKo'] ?? item['shortname'] ?? item['name'] ?? '',
+              'nameEn': item['nameEn'] ?? item['longname'] ?? item['shortname'] ?? item['name'] ?? '',
+              'exchange': exchange,
             };
           }).toList();
           _isSearching = false;
