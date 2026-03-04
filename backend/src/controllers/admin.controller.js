@@ -6,6 +6,7 @@
 import User from '../models/User.js';
 import AIAnalysis from '../models/AIAnalysis.js';
 import SystemLog from '../models/SystemLog.js';
+import SystemConfig from '../models/SystemConfig.js';
 import Watchlist from '../models/Watchlist.js';
 import { getWSStats } from '../services/websocket.service.js';
 import cacheService from '../services/cache.service.js';
@@ -202,39 +203,76 @@ const adminController = {
 
   /**
    * GET /api/admin/config
-   * Returns current system configuration (non-sensitive)
+   * Returns current system configuration from DB (non-sensitive)
    */
   async getConfig(req, res, next) {
     try {
+      const config = await SystemConfig.getConfig();
+
       res.json({
         success: true,
         data: {
-          free: {
-            dailyBasicLimit: 3,
-            maxWatchlist: 10,
-            wsPollInterval: '30s',
-            maxWsSubscriptions: 5,
-          },
-          pro: {
-            dailyBasicLimit: 'unlimited',
-            maxWatchlist: 'unlimited',
-            wsPollInterval: '10s',
-            maxWsSubscriptions: 20,
-            creditCost: {
-              geminiPro: 10,
-              openai: 20,
-            },
-          },
-          creditPackages: [
-            { credits: 100, price: 1000, currency: 'KRW' },
-            { credits: 500, price: 5000, currency: 'KRW' },
-            { credits: 2000, price: 15000, currency: 'KRW' },
-          ],
+          features: config.features,
+          free: config.free,
+          pro: config.pro,
+          creditPackages: config.creditPackages,
+          maintenance: config.maintenance,
           ai: {
             hasGemini: !!process.env.GEMINI_API_KEY,
             hasOpenAI: !!process.env.OPENAI_API_KEY,
           },
           cache: cacheService.getStats(),
+          updatedAt: config.updatedAt,
+        },
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  /**
+   * PUT /api/admin/config
+   * Update system configuration (partial update)
+   * Body: { features?: {...}, free?: {...}, pro?: {...}, creditPackages?: [...], maintenance?: {...} }
+   */
+  async updateConfig(req, res, next) {
+    try {
+      const allowedKeys = ['features', 'free', 'pro', 'creditPackages', 'maintenance'];
+      const updates = {};
+
+      for (const key of allowedKeys) {
+        if (req.body[key] !== undefined) {
+          updates[key] = req.body[key];
+        }
+      }
+
+      if (Object.keys(updates).length === 0) {
+        throw ApiError.badRequest('No valid config fields provided');
+      }
+
+      const config = await SystemConfig.updateConfig(updates);
+
+      logger.info('Admin updated system config', {
+        source: 'admin.controller',
+        updatedKeys: Object.keys(updates),
+        adminEmail: req.user?.email,
+      });
+
+      res.json({
+        success: true,
+        message: 'Configuration updated',
+        data: {
+          features: config.features,
+          free: config.free,
+          pro: config.pro,
+          creditPackages: config.creditPackages,
+          maintenance: config.maintenance,
+          ai: {
+            hasGemini: !!process.env.GEMINI_API_KEY,
+            hasOpenAI: !!process.env.OPENAI_API_KEY,
+          },
+          cache: cacheService.getStats(),
+          updatedAt: config.updatedAt,
         },
       });
     } catch (error) {

@@ -56,6 +56,7 @@ router.put(
 
 // ─── Config ──────────────────────────────────────────
 router.get('/config', adminController.getConfig);
+router.put('/config', adminController.updateConfig);
 
 // ─── Logs ────────────────────────────────────────────
 router.get('/logs', adminController.getLogs);

@@ -52,6 +52,7 @@ export const adminApi = {
 
   // Config
   getConfig: () => api.get('/admin/config'),
+  updateConfig: (data) => api.put('/admin/config', data),
 
   // Logs
   getLogs: (params) => api.get('/admin/logs', { params }),
