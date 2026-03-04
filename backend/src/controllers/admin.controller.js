@@ -209,6 +209,12 @@ const adminController = {
     try {
       const config = await SystemConfig.getConfig();
 
+      // Mask API keys for display (show last 4 chars only)
+      const maskKey = (key) => {
+        if (!key || key.length < 8) return key ? '••••' : '';
+        return '••••••••' + key.slice(-4);
+      };
+
       res.json({
         success: true,
         data: {
@@ -217,9 +223,11 @@ const adminController = {
           pro: config.pro,
           creditPackages: config.creditPackages,
           maintenance: config.maintenance,
-          ai: {
-            hasGemini: !!process.env.GEMINI_API_KEY,
-            hasOpenAI: !!process.env.OPENAI_API_KEY,
+          aiKeys: {
+            geminiApiKey: maskKey(config.aiKeys?.geminiApiKey || process.env.GEMINI_API_KEY),
+            groqApiKey: maskKey(config.aiKeys?.groqApiKey || process.env.GROQ_API_KEY),
+            hasGemini: !!(config.aiKeys?.geminiApiKey || process.env.GEMINI_API_KEY),
+            hasGroq: !!(config.aiKeys?.groqApiKey || process.env.GROQ_API_KEY),
           },
           cache: cacheService.getStats(),
           updatedAt: config.updatedAt,
@@ -237,7 +245,7 @@ const adminController = {
    */
   async updateConfig(req, res, next) {
     try {
-      const allowedKeys = ['features', 'free', 'pro', 'creditPackages', 'maintenance'];
+      const allowedKeys = ['features', 'free', 'pro', 'creditPackages', 'maintenance', 'aiKeys'];
       const updates = {};
 
       for (const key of allowedKeys) {
@@ -258,6 +266,29 @@ const adminController = {
         adminEmail: req.user?.email,
       });
 
+      // If AI keys were updated, apply them to process.env and reinitialize AI clients
+      if (updates.aiKeys) {
+        if (updates.aiKeys.geminiApiKey && !updates.aiKeys.geminiApiKey.includes('••••')) {
+          process.env.GEMINI_API_KEY = updates.aiKeys.geminiApiKey;
+        }
+        if (updates.aiKeys.groqApiKey && !updates.aiKeys.groqApiKey.includes('••••')) {
+          process.env.GROQ_API_KEY = updates.aiKeys.groqApiKey;
+        }
+        // Reinitialize AI clients with new keys
+        try {
+          const { reinitializeClients } = await import('../services/ai.service.js');
+          reinitializeClients();
+        } catch (e) {
+          logger.warn('Could not reinitialize AI clients', { error: e.message });
+        }
+      }
+
+      // Mask API keys for response
+      const maskKey = (key) => {
+        if (!key || key.length < 8) return key ? '••••' : '';
+        return '••••••••' + key.slice(-4);
+      };
+
       res.json({
         success: true,
         message: 'Configuration updated',
@@ -267,9 +298,11 @@ const adminController = {
           pro: config.pro,
           creditPackages: config.creditPackages,
           maintenance: config.maintenance,
-          ai: {
-            hasGemini: !!process.env.GEMINI_API_KEY,
-            hasOpenAI: !!process.env.OPENAI_API_KEY,
+          aiKeys: {
+            geminiApiKey: maskKey(config.aiKeys?.geminiApiKey),
+            groqApiKey: maskKey(config.aiKeys?.groqApiKey),
+            hasGemini: !!(config.aiKeys?.geminiApiKey || process.env.GEMINI_API_KEY),
+            hasGroq: !!(config.aiKeys?.groqApiKey || process.env.GROQ_API_KEY),
           },
           cache: cacheService.getStats(),
           updatedAt: config.updatedAt,

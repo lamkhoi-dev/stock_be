@@ -20,6 +20,9 @@ import {
   Star,
   Wrench,
   CheckCircle,
+  Key,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export default function ConfigPage() {
@@ -71,6 +74,19 @@ export default function ConfigPage() {
       }
       if (JSON.stringify(config.maintenance) !== JSON.stringify(original.maintenance)) {
         payload.maintenance = config.maintenance;
+      }
+      // Only send aiKeys if user actually typed new keys (not masked values)
+      if (JSON.stringify(config.aiKeys) !== JSON.stringify(original.aiKeys)) {
+        const aiKeysPayload = {};
+        if (config.aiKeys?.geminiApiKey !== original.aiKeys?.geminiApiKey && !config.aiKeys?.geminiApiKey?.includes('••••')) {
+          aiKeysPayload.geminiApiKey = config.aiKeys.geminiApiKey;
+        }
+        if (config.aiKeys?.groqApiKey !== original.aiKeys?.groqApiKey && !config.aiKeys?.groqApiKey?.includes('••••')) {
+          aiKeysPayload.groqApiKey = config.aiKeys.groqApiKey;
+        }
+        if (Object.keys(aiKeysPayload).length > 0) {
+          payload.aiKeys = aiKeysPayload;
+        }
       }
 
       const res = await adminApi.updateConfig(payload);
@@ -131,6 +147,13 @@ export default function ConfigPage() {
     setConfig((prev) => ({
       ...prev,
       maintenance: { ...prev.maintenance, message: msg },
+    }));
+  };
+
+  const updateAiKey = (key, value) => {
+    setConfig((prev) => ({
+      ...prev,
+      aiKeys: { ...prev.aiKeys, [key]: value },
     }));
   };
 
@@ -371,35 +394,28 @@ export default function ConfigPage() {
         </div>
       )}
 
-      {/* AI Services */}
+      {/* AI API Keys */}
       <div className="bg-navy-800 border border-navy-600 rounded-xl p-5">
         <h3 className="text-sm font-semibold text-gray-300 mb-4 flex items-center gap-2">
-          <BrainCircuit size={16} className="text-purple-400" /> AI Services
+          <Key size={16} className="text-purple-400" /> AI API Keys
         </h3>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                config.ai?.hasGemini ? 'bg-green-400' : 'bg-red-400'
-              }`}
-            />
-            <span className="text-gray-400">Google Gemini</span>
-            <span className={config.ai?.hasGemini ? 'text-green-400' : 'text-red-400'}>
-              {config.ai?.hasGemini ? 'Active' : 'Not Configured'}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div
-              className={`w-2 h-2 rounded-full ${
-                config.ai?.hasOpenAI ? 'bg-green-400' : 'bg-red-400'
-              }`}
-            />
-            <span className="text-gray-400">OpenAI / Groq</span>
-            <span className={config.ai?.hasOpenAI ? 'text-green-400' : 'text-red-400'}>
-              {config.ai?.hasOpenAI ? 'Active' : 'Not Configured'}
-            </span>
-          </div>
+        <div className="space-y-4">
+          <ApiKeyRow
+            label="Google Gemini API Key"
+            value={config.aiKeys?.geminiApiKey || ''}
+            isActive={config.aiKeys?.hasGemini}
+            onChange={(v) => updateAiKey('geminiApiKey', v)}
+          />
+          <ApiKeyRow
+            label="Groq API Key"
+            value={config.aiKeys?.groqApiKey || ''}
+            isActive={config.aiKeys?.hasGroq}
+            onChange={(v) => updateAiKey('groqApiKey', v)}
+          />
         </div>
+        <p className="text-xs text-gray-500 mt-3">
+          Keys are masked for security. Enter a new key to replace the existing one. Changes take effect immediately after save.
+        </p>
       </div>
 
       {/* Cache */}
@@ -441,6 +457,40 @@ function ConfigRow({ label, value }) {
     <div className="flex items-center justify-between py-1.5">
       <span className="text-gray-400">{label}</span>
       <span className="text-gray-200 font-medium">{value}</span>
+    </div>
+  );
+}
+
+function ApiKeyRow({ label, value, isActive, onChange }) {
+  const [show, setShow] = useState(false);
+  const isMasked = value?.includes('••••');
+
+  return (
+    <div className="space-y-1.5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-green-400' : 'bg-red-400'}`} />
+          <span className="text-sm text-gray-300">{label}</span>
+          <span className={`text-xs ${isActive ? 'text-green-400' : 'text-red-400'}`}>
+            {isActive ? 'Active' : 'Not Set'}
+          </span>
+        </div>
+        <button
+          onClick={() => setShow(!show)}
+          className="text-gray-500 hover:text-gray-300 transition-colors"
+          title={show ? 'Hide' : 'Show'}
+        >
+          {show ? <EyeOff size={14} /> : <Eye size={14} />}
+        </button>
+      </div>
+      <input
+        type={show ? 'text' : 'password'}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => { if (isMasked) onChange(''); }}
+        placeholder="Enter API key..."
+        className="w-full bg-navy-700 border border-navy-600 rounded-lg px-3 py-2 text-sm text-gray-200 placeholder-gray-500 font-mono focus:outline-none focus:border-accent"
+      />
     </div>
   );
 }

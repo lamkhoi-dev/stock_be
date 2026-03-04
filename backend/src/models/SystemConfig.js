@@ -55,6 +55,12 @@ const systemConfigSchema = new mongoose.Schema({
     ],
   },
 
+  // ─── AI API Keys (encrypted at rest via MongoDB) ────
+  aiKeys: {
+    geminiApiKey: { type: String, default: '' },
+    groqApiKey: { type: String, default: '' },
+  },
+
   // ─── Maintenance ────────────────────────────────────
   maintenance: {
     enabled: { type: Boolean, default: false },

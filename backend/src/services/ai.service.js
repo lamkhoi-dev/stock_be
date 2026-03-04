@@ -54,20 +54,32 @@ let geminiClient = null;
 let groqClient = null;
 
 function getGemini() {
-  if (!geminiClient && env.GEMINI_API_KEY && !env.GEMINI_API_KEY.includes('your_')) {
-    geminiClient = new GoogleGenerativeAI(env.GEMINI_API_KEY);
+  const key = process.env.GEMINI_API_KEY || env.GEMINI_API_KEY;
+  if (!geminiClient && key && !key.includes('your_')) {
+    geminiClient = new GoogleGenerativeAI(key);
   }
   return geminiClient;
 }
 
 function getGroq() {
-  if (!groqClient && env.GROQ_API_KEY && !env.GROQ_API_KEY.includes('your_')) {
+  const key = process.env.GROQ_API_KEY || env.GROQ_API_KEY;
+  if (!groqClient && key && !key.includes('your_')) {
     groqClient = new OpenAI({
-      apiKey: env.GROQ_API_KEY,
+      apiKey: key,
       baseURL: 'https://api.groq.com/openai/v1',
     });
   }
   return groqClient;
+}
+
+/**
+ * Reinitialize AI clients (called when admin updates API keys at runtime).
+ */
+export function reinitializeClients() {
+  geminiClient = null;
+  groqClient = null;
+  // Next call to getGemini()/getGroq() will create fresh clients with new keys
+  logger.info('AI clients reinitialized with updated API keys', { source: 'ai.service' });
 }
 
 // ─── Prompt Templates ────────────────────────────────
