@@ -378,9 +378,13 @@ class _SearchResultItem extends StatelessWidget {
         children: [
           ExchangeBadge(exchange: exchange, small: true),
           const SizedBox(width: 6),
-          Text(
-            '$nameEn · $symbol',
-            style: TextStyle(fontSize: 12, color: colorScheme.secondary),
+          Expanded(
+            child: Text(
+              '$nameEn · $symbol',
+              style: TextStyle(fontSize: 12, color: colorScheme.secondary),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
           ),
         ],
       ),

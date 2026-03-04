@@ -7,6 +7,7 @@ import kisService from '../services/kis.service.js';
 import yahooService from '../services/yahoo.service.js';
 import indicatorsService from '../services/indicators.service.js';
 import stockSearchService from '../services/stock-search.service.js';
+import KRX_STOCKS from '../data/krx-stocks.js';
 import cacheService from '../services/cache.service.js';
 import logger from '../utils/logger.js';
 
@@ -162,20 +163,56 @@ export const getStockList = async (req, res, next) => {
   try {
     const { sort = 'change', market = 'all' } = req.query;
 
-    // Try to fetch from multiple ranking endpoints to build a large list
+    // 1. Start with KRX dictionary as the base (150+ stocks)
+    const stockMap = new Map();
+    for (const entry of KRX_STOCKS) {
+      // Filter by market early if requested
+      if (market === 'KOSPI' && entry.market !== 'KOSPI') continue;
+      if (market === 'KOSDAQ' && entry.market !== 'KOSDAQ') continue;
+      stockMap.set(entry.symbol, {
+        symbol: entry.symbol,
+        name: entry.nameKo,
+        englishName: entry.nameEn,
+        exchange: entry.market,
+        price: 0,
+        change: 0,
+        changePct: 0,
+        volume: 0,
+        tradingValue: 0,
+        hasLiveData: false,
+      });
+    }
+
+    // 2. Fetch live data from KIS rankings to enrich
     const results = await Promise.allSettled([
       kisService.getFluctuationRanking('1'),  // Gainers
       kisService.getFluctuationRanking('3'),  // Losers
       kisService.getVolumeRanking(),           // Volume leaders
     ]);
 
-    // Merge & dedup by symbol
-    const stockMap = new Map();
+    // 3. Merge live KIS data — update existing entries or add new ones
     for (const result of results) {
       if (result.status === 'fulfilled') {
         for (const stock of result.value.data) {
-          if (!stockMap.has(stock.symbol)) {
-            stockMap.set(stock.symbol, stock);
+          const existing = stockMap.get(stock.symbol);
+          if (existing) {
+            // Enrich dictionary entry with live data
+            existing.price = stock.price;
+            existing.change = stock.change;
+            existing.changePct = stock.changePct;
+            existing.volume = stock.volume;
+            existing.tradingValue = stock.tradingValue || 0;
+            existing.hasLiveData = true;
+          } else {
+            // KIS returned a stock not in dictionary — add it
+            if (market === 'KOSPI' && (stock.symbol.startsWith('4') || stock.symbol.startsWith('3'))) continue;
+            if (market === 'KOSDAQ' && !(stock.symbol.startsWith('4') || stock.symbol.startsWith('3'))) continue;
+            stockMap.set(stock.symbol, {
+              ...stock,
+              englishName: '',
+              exchange: (stock.symbol.startsWith('4') || stock.symbol.startsWith('3')) ? 'KOSDAQ' : 'KOSPI',
+              hasLiveData: true,
+            });
           }
         }
       }
@@ -183,28 +220,21 @@ export const getStockList = async (req, res, next) => {
 
     let stocks = Array.from(stockMap.values());
 
-    // Filter by market if requested
-    if (market === 'KOSPI') {
-      stocks = stocks.filter(s => !s.symbol.startsWith('4') && !s.symbol.startsWith('3'));
-    } else if (market === 'KOSDAQ') {
-      stocks = stocks.filter(s => s.symbol.startsWith('4') || s.symbol.startsWith('3'));
-    }
-
-    // Sort
+    // 4. Sort — stocks with live data first, then by chosen criteria
     if (sort === 'volume') {
-      stocks.sort((a, b) => (b.volume || 0) - (a.volume || 0));
+      stocks.sort((a, b) => (b.hasLiveData ? 1 : 0) - (a.hasLiveData ? 1 : 0) || (b.volume || 0) - (a.volume || 0));
     } else if (sort === 'name') {
       stocks.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else {
-      // Default: sort by absolute change %
-      stocks.sort((a, b) => Math.abs(b.changePct || 0) - Math.abs(a.changePct || 0));
+      // Default: sort by absolute change %, live data first
+      stocks.sort((a, b) => (b.hasLiveData ? 1 : 0) - (a.hasLiveData ? 1 : 0) || Math.abs(b.changePct || 0) - Math.abs(a.changePct || 0));
     }
 
     res.json({
       success: true,
       data: stocks,
       total: stocks.length,
-      source: 'kis',
+      source: 'kis+dictionary',
     });
   } catch (err) {
     next(err);
