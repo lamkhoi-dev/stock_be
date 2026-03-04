@@ -6,11 +6,12 @@ import rateLimit from 'express-rate-limit';
 
 /**
  * General API rate limiter
- * 100 requests per 15 minutes per IP
+ * 300 requests per 15 minutes per IP
+ * (Stock app needs many calls: list, quotes, chart, watchlist, etc.)
  */
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 300,
   message: {
     success: false,
     error: {
@@ -24,11 +25,11 @@ export const apiLimiter = rateLimit({
 
 /**
  * Auth routes rate limiter
- * 10 attempts per 15 minutes per IP (login, register, etc.)
+ * 20 attempts per 15 minutes per IP (login, register, etc.)
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 10,
+  max: 20,
   message: {
     success: false,
     error: {
