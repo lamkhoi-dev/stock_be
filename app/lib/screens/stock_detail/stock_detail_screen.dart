@@ -193,8 +193,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
     final changePct = (stockData['changePercent'] as num?)?.toDouble() ?? 0;
     final isUp = change >= 0;
 
-    // The backend /stocks/price/:symbol returns name in the response
-    // We'll display the symbol as fallback
     final nameKo = (stockData['nameKo'] as String?) ?? '';
     final nameEn = (stockData['nameEn'] as String?) ?? '';
     final displayName = nameKo.isNotEmpty
@@ -203,15 +201,21 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
             ? nameEn
             : widget.symbol;
     final exchange = (stockData['exchange'] as String?) ?? 'KOSPI';
+    final priceColor = isUp ? appColors.priceUp : appColors.priceDown;
+
+    // kToolbarHeight ≈ 56, TabBar height ≈ 46, status bar varies
+    const double expandedHeight = 270;
 
     return SliverAppBar(
       pinned: true,
       floating: false,
-      expandedHeight: 270,
+      expandedHeight: expandedHeight,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios, size: 20),
         onPressed: () => context.pop(),
       ),
+      // Compact title shown when collapsed
+      title: null, // We handle this in flexibleSpace
       actions: [
         IconButton(
           icon: Icon(
@@ -239,102 +243,181 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
           },
         ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          padding:
-              const EdgeInsets.only(left: 16, right: 16, top: 90, bottom: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Stock name
-              Text(
-                displayName,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                  color: colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Row(
-                children: [
-                  if (nameEn.isNotEmpty && nameKo.isNotEmpty)
-                    Flexible(
-                      child: Text(
-                        nameEn,
-                        style: TextStyle(
-                            fontSize: 13, color: colorScheme.secondary),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+      flexibleSpace: LayoutBuilder(
+        builder: (context, constraints) {
+          final statusBarHeight = MediaQuery.of(context).padding.top;
+          final minHeight = statusBarHeight + kToolbarHeight + 46; // toolbar + tabBar
+          final maxHeight = expandedHeight + statusBarHeight;
+          final currentHeight = constraints.maxHeight;
+          // 1.0 = fully expanded, 0.0 = fully collapsed
+          final expandRatio = ((currentHeight - minHeight) / (maxHeight - minHeight)).clamp(0.0, 1.0);
+          final isCollapsed = expandRatio < 0.3;
+
+          return FlexibleSpaceBar(
+            background: Stack(
+              children: [
+                // Expanded header content with opacity fade
+                Opacity(
+                  opacity: expandRatio,
+                  child: Container(
+                    padding: const EdgeInsets.only(
+                        left: 16, right: 16, top: 90, bottom: 8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Stock name
+                        Text(
+                          displayName,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            if (nameEn.isNotEmpty && nameKo.isNotEmpty)
+                              Flexible(
+                                child: Text(
+                                  nameEn,
+                                  style: TextStyle(
+                                      fontSize: 13,
+                                      color: colorScheme.secondary),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            if (nameEn.isNotEmpty && nameKo.isNotEmpty)
+                              const SizedBox(width: 8),
+                            ExchangeBadge(exchange: exchange, small: true),
+                            const SizedBox(width: 6),
+                            Text(widget.symbol,
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurface
+                                        .withValues(alpha: 0.38))),
+                            const SizedBox(width: 6),
+                            Text('KRW 🇰🇷',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    color: colorScheme.onSurface
+                                        .withValues(alpha: 0.38))),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        // Price
+                        Text(
+                          formatKRW(price),
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: colorScheme.onSurface,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        // Change
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: priceColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${isUp ? "▲" : "▼"} ${formatKRW(change.abs())} (${isUp ? "+" : ""}${changePct.toStringAsFixed(2)}%)',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: priceColor,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  if (nameEn.isNotEmpty && nameKo.isNotEmpty)
-                    const SizedBox(width: 8),
-                  ExchangeBadge(exchange: exchange, small: true),
-                  const SizedBox(width: 6),
-                  Text(widget.symbol,
-                      style: TextStyle(
-                          fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.38))),
-                  const SizedBox(width: 6),
-                  Text('KRW 🇰🇷',
-                      style:
-                          TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.38))),
-                ],
-              ),
-              const SizedBox(height: 10),
-              // Price
-              Text(
-                formatKRW(price),
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: colorScheme.onSurface,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              // Change
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: (isUp ? appColors.priceUp : appColors.priceDown)
-                      .withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${isUp ? "▲" : "▼"} ${formatKRW(change.abs())} (${isUp ? "+" : ""}${changePct.toStringAsFixed(2)}%)',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: isUp ? appColors.priceUp : appColors.priceDown,
                   ),
                 ),
-              ),
+                // Collapsed compact title — shows name + price in the toolbar area
+                Positioned(
+                  left: 48,
+                  right: 48,
+                  top: statusBarHeight + 12,
+                  child: Opacity(
+                    opacity: (1.0 - expandRatio).clamp(0.0, 1.0),
+                    child: isCollapsed
+                        ? Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                displayName,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: colorScheme.onSurface,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 1),
+                              Row(
+                                children: [
+                                  Text(
+                                    formatKRW(price),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w700,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    '${isUp ? "+" : ""}${changePct.toStringAsFixed(2)}%',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: priceColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          )
+                        : const SizedBox.shrink(),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(46),
+        child: Container(
+          color: colorScheme.surface,
+          child: TabBar(
+            controller: _tabController,
+            indicatorColor: colorScheme.primary,
+            indicatorWeight: 2.5,
+            labelColor: colorScheme.primary,
+            unselectedLabelColor: colorScheme.secondary,
+            labelStyle:
+                const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            tabs: [
+              Tab(text: S.of(context).tabChart),
+              Tab(text: S.of(context).tabInfo),
+              Tab(
+                  child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(S.of(context).tabAI),
+                  const SizedBox(width: 4),
+                  const Text('✨', style: TextStyle(fontSize: 12)),
+                ],
+              )),
+              Tab(text: S.of(context).tabNews),
             ],
           ),
         ),
-      ),
-      bottom: TabBar(
-        controller: _tabController,
-        indicatorColor: colorScheme.primary,
-        indicatorWeight: 2.5,
-        labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.secondary,
-        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-        tabs: [
-          Tab(text: S.of(context).tabChart),
-          Tab(text: S.of(context).tabInfo),
-          Tab(
-              child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(S.of(context).tabAI),
-              const SizedBox(width: 4),
-              const Text('✨', style: TextStyle(fontSize: 12)),
-            ],
-          )),
-          Tab(text: S.of(context).tabNews),
-        ],
       ),
     );
   }

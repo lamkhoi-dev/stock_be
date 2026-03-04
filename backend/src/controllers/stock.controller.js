@@ -311,10 +311,26 @@ export const searchStocks = async (req, res, next) => {
 /**
  * GET /api/stocks/news/:symbol
  * News for a symbol (Yahoo Finance)
+ * Tries .KS (KOSPI) first, then .KQ (KOSDAQ) if no results.
  */
 export const getNews = async (req, res, next) => {
   try {
-    const result = await yahooService.getNews(req.params.symbol);
+    const rawSymbol = req.params.symbol;
+    // Yahoo Finance requires .KS/.KQ suffix for Korean stocks
+    const yahooSymbol = rawSymbol.includes('.') ? rawSymbol : `${rawSymbol}.KS`;
+
+    let result = await yahooService.getNews(yahooSymbol);
+
+    // If no news with .KS, try .KQ (KOSDAQ)
+    if ((!result.data || result.data.length === 0) && !rawSymbol.includes('.')) {
+      result = await yahooService.getNews(`${rawSymbol}.KQ`);
+    }
+
+    // If still no news, try searching by raw symbol number as last resort
+    if ((!result.data || result.data.length === 0) && !rawSymbol.includes('.')) {
+      result = await yahooService.getNews(rawSymbol);
+    }
+
     res.json({ success: true, ...result, source: 'yahoo' });
   } catch (err) {
     next(err);

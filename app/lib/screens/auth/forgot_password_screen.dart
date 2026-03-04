@@ -35,8 +35,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     });
     try {
       final api = ref.read(apiClientProvider);
-      await api.login(_emailController.text.trim(), ''); // Will call forgot password endpoint
-      // For now, simulate success since we don't have a forgot-password endpoint in ApiClient
+      await api.forgotPassword(_emailController.text.trim());
       setState(() {
         _isLoading = false;
         _emailSent = true;
