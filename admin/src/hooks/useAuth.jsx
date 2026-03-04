@@ -34,8 +34,9 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (email, password) => {
     const res = await authApi.login(email, password);
-    const { accessToken, refreshToken, user: u } = res.data;
-    if (u.role !== 'admin') {
+    const payload = res.data.data || res.data;
+    const { accessToken, refreshToken, user: u } = payload;
+    if (!u || u.role !== 'admin') {
       throw new Error('Access denied — admin only');
     }
     localStorage.setItem('admin_token', accessToken);
