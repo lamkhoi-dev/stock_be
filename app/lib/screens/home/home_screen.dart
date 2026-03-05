@@ -69,6 +69,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       _losers.isEmpty &&
       _kospiValue == null;
 
+  /// Check if ANY section still has missing data worth retrying
+  bool get _hasEmptySections =>
+      _marketStocks.isEmpty ||
+      (_gainers.isEmpty && _losers.isEmpty) ||
+      _kospiValue == null;
+
   /// Schedule auto-retry for empty sections after backend cold start
   void _scheduleRetryIfNeeded() {
     if (!mounted) return;
@@ -76,8 +82,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (mounted) setState(() => _isRetrying = false);
       return;
     }
-    if (!_hasNoData) {
-      // We got some data — stop retrying
+    if (!_hasEmptySections) {
+      // All key sections have data — stop retrying
       if (mounted) setState(() => _isRetrying = false);
       return;
     }

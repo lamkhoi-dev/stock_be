@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/stock_provider.dart';
+import '../../providers/ai_provider.dart';
 import '../../providers/watchlist_provider.dart';
 import '../../providers/websocket_provider.dart';
 import '../../utils/formatters.dart';
@@ -15,9 +16,9 @@ import '../../widgets/common/error_retry_widget.dart';
 import 'widgets/chart_tab.dart';
 import 'widgets/info_tab.dart';
 import 'widgets/ai_analysis_tab.dart';
-import 'widgets/news_tab.dart';
 
-/// Stock Detail Screen — Header with price + 4 tabs (Chart, Info, AI, News).
+
+/// Stock Detail Screen — Header with price + 3 tabs (Chart, Info, AI).
 class StockDetailScreen extends ConsumerStatefulWidget {
   const StockDetailScreen({super.key, required this.symbol});
   final String symbol;
@@ -33,13 +34,15 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     // Rebuild when tab changes so we can toggle swipe physics
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) setState(() {});
     });
     // Subscribe to real-time WebSocket updates for this symbol
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Clear previous AI analysis results when entering a new stock
+      ref.read(aiProvider.notifier).clear();
       final ws = ref.read(websocketProvider.notifier);
       final wsState = ref.read(websocketProvider);
       if (wsState.status == WSStatus.connected) {
@@ -175,7 +178,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
             ChartTab(symbol: widget.symbol, stockData: stockData),
             InfoTab(stockData: stockData),
             AiAnalysisTab(symbol: widget.symbol, stockData: stockData),
-            NewsTab(symbol: widget.symbol),
           ],
         ),
       ),
@@ -414,7 +416,6 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
                   const Text('✨', style: TextStyle(fontSize: 12)),
                 ],
               )),
-              Tab(text: S.of(context).tabNews),
             ],
           ),
         ),

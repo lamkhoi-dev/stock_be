@@ -203,7 +203,7 @@ class _ChartTabState extends ConsumerState<ChartTab>
     _ => 2,  // 5Y → weekly (default, user can switch to daily)
   };
 
-  Future<void> _loadChartData() async {
+  Future<void> _loadChartData({int retryCount = 0}) async {
     // Estimate if this will be a large fetch
     final estCandles = _getMaxCandles();
     final hint = estCandles > 200
@@ -274,6 +274,17 @@ class _ChartTabState extends ConsumerState<ChartTab>
 
       setState(() => _isLoading = false);
     } catch (e) {
+      // Retry once on server errors (500, timeout, connection reset)
+      final errStr = e.toString();
+      final isRetryable = retryCount < 1 &&
+          (errStr.contains('500') ||
+           errStr.contains('timeout') ||
+           errStr.contains('SocketException') ||
+           errStr.contains('Connection'));
+      if (isRetryable && mounted) {
+        await Future.delayed(const Duration(milliseconds: 800));
+        return _loadChartData(retryCount: retryCount + 1);
+      }
       if (mounted) {
         setState(() {
           _isLoading = false;

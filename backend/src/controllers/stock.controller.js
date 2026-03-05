@@ -12,25 +12,37 @@ import cacheService from '../services/cache.service.js';
 import logger from '../utils/logger.js';
 
 /**
- * Wrap async handler with KIS→Yahoo fallback
+ * Wrap async handler with KIS→Yahoo fallback + retry
  */
 function withFallback(kisFn, yahooFn) {
   return async (req, res, next) => {
-    try {
-      const result = await kisFn(req);
-      return res.json({ success: true, ...result, source: 'kis' });
-    } catch (kisErr) {
-      if (!yahooFn) {
-        logger.error(`KIS error (no fallback): ${kisErr.message}`);
-        return next(kisErr);
-      }
-      logger.warn(`KIS failed, falling back to Yahoo: ${kisErr.message}`);
+    // Try KIS up to 2 times (retry once on transient failures)
+    for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const result = await yahooFn(req);
-        return res.json({ success: true, ...result, source: 'yahoo' });
-      } catch (yahooErr) {
-        logger.error(`Both KIS and Yahoo failed: KIS=${kisErr.message}, Yahoo=${yahooErr.message}`);
-        return next(kisErr); // Surface KIS error as primary
+        const result = await kisFn(req);
+        return res.json({ success: true, ...result, source: 'kis' });
+      } catch (kisErr) {
+        const isTransient = kisErr.message?.includes('token') ||
+          kisErr.message?.includes('timeout') ||
+          kisErr.message?.includes('ECONNRESET') ||
+          kisErr.code === 'ECONNABORTED';
+        if (attempt === 0 && isTransient) {
+          logger.warn(`KIS transient error (retrying): ${kisErr.message}`);
+          await new Promise(r => setTimeout(r, 500));
+          continue;
+        }
+        if (!yahooFn) {
+          logger.error(`KIS error (no fallback): ${kisErr.message}`);
+          return next(kisErr);
+        }
+        logger.warn(`KIS failed, falling back to Yahoo: ${kisErr.message}`);
+        try {
+          const result = await yahooFn(req);
+          return res.json({ success: true, ...result, source: 'yahoo' });
+        } catch (yahooErr) {
+          logger.error(`Both KIS and Yahoo failed: KIS=${kisErr.message}, Yahoo=${yahooErr.message}`);
+          return next(kisErr);
+        }
       }
     }
   };
@@ -213,6 +225,32 @@ export const getStockList = async (req, res, next) => {
               exchange: (stock.symbol.startsWith('4') || stock.symbol.startsWith('3')) ? 'KOSDAQ' : 'KOSPI',
               hasLiveData: true,
             });
+          }
+        }
+      }
+    }
+
+    // 3b. Batch-fetch prices for stocks that still have no live data
+    //     KIS rate limit: 1 req / 300ms → fetch up to 40 stocks (~12s)
+    const missingStocks = Array.from(stockMap.values()).filter(s => !s.hasLiveData);
+    if (missingStocks.length > 0) {
+      const BATCH_LIMIT = 40; // max stocks to fetch individually (~12s at 300ms each)
+      const toFetch = missingStocks.slice(0, BATCH_LIMIT);
+      const batchResults = await Promise.allSettled(
+        toFetch.map(s => kisService.getPrice(s.symbol).catch(() => null))
+      );
+      for (let i = 0; i < batchResults.length; i++) {
+        const result = batchResults[i];
+        if (result.status === 'fulfilled' && result.value?.data) {
+          const d = result.value.data;
+          const entry = stockMap.get(toFetch[i].symbol);
+          if (entry) {
+            entry.price = d.price || 0;
+            entry.change = d.change || 0;
+            entry.changePct = d.changePct || 0;
+            entry.volume = d.volume || 0;
+            entry.tradingValue = d.tradingValue || 0;
+            entry.hasLiveData = true;
           }
         }
       }

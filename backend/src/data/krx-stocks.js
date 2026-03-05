@@ -181,6 +181,39 @@ const KRX_STOCKS = [
   { symbol: '016800', nameKo: '퍼시스', nameEn: 'Fursys', market: 'KOSDAQ' },
   { symbol: '041190', nameKo: '우리기술투자', nameEn: 'Woori Venture Partners', market: 'KOSDAQ' },
   { symbol: '100220', nameKo: '비상교육', nameEn: 'Visang Education', market: 'KOSDAQ' },
+
+  // ── Additional KOSPI Stocks ─────────────────────────────────
+  { symbol: '000080', nameKo: '하이트진로', nameEn: 'HiteJinro', market: 'KOSPI' },
+  { symbol: '000210', nameKo: '대림산업', nameEn: 'DL Holdings', market: 'KOSPI' },
+  { symbol: '000240', nameKo: '한국타이어앤테크놀로지', nameEn: 'Hankook Tire & Tech', market: 'KOSPI' },
+  { symbol: '000990', nameKo: 'DB하이텍', nameEn: 'DB HiTek', market: 'KOSPI' },
+  { symbol: '001120', nameKo: 'LX인터내셔널', nameEn: 'LX International', market: 'KOSPI' },
+  { symbol: '001440', nameKo: '대한전선', nameEn: 'Taihan Cable & Solution', market: 'KOSPI' },
+  { symbol: '001450', nameKo: '현대해상', nameEn: 'Hyundai Marine & Fire', market: 'KOSPI' },
+  { symbol: '001740', nameKo: 'SK네트웍스', nameEn: 'SK Networks', market: 'KOSPI' },
+  { symbol: '003850', nameKo: '보령', nameEn: 'Boryung Corp', market: 'KOSPI' },
+  { symbol: '004490', nameKo: '세방전지', nameEn: 'Sebang Battery', market: 'KOSPI' },
+  { symbol: '008770', nameKo: '호텔신라', nameEn: 'Hotel Shilla', market: 'KOSPI' },
+  { symbol: '014680', nameKo: '한솔케미칼', nameEn: 'Hansol Chemical', market: 'KOSPI' },
+  { symbol: '018880', nameKo: '한온시스템', nameEn: 'Hanon Systems', market: 'KOSPI' },
+  { symbol: '028050', nameKo: '삼성엔지니어링', nameEn: 'Samsung Engineering', market: 'KOSPI' },
+  { symbol: '029780', nameKo: '삼성카드', nameEn: 'Samsung Card', market: 'KOSPI' },
+  { symbol: '034220', nameKo: 'LG디스플레이', nameEn: 'LG Display', market: 'KOSPI' },
+  { symbol: '042670', nameKo: 'HD현대인프라코어', nameEn: 'HD Hyundai Infracore', market: 'KOSPI' },
+  { symbol: '071050', nameKo: '한국금융지주', nameEn: 'Korea Investment Holdings', market: 'KOSPI' },
+  { symbol: '079550', nameKo: 'LIG넥스원', nameEn: 'LIG Nex1', market: 'KOSPI' },
+  { symbol: '081660', nameKo: '휠라홀딩스', nameEn: 'Fila Holdings', market: 'KOSPI' },
+  { symbol: '086280', nameKo: '현대글로비스', nameEn: 'Hyundai Glovis', market: 'KOSPI' },
+  { symbol: '100840', nameKo: 'SNT에너지', nameEn: 'SNT Energy', market: 'KOSPI' },
+  { symbol: '120110', nameKo: '코오롱인더', nameEn: 'Kolon Industries', market: 'KOSPI' },
+  { symbol: '267250', nameKo: 'HD현대', nameEn: 'HD Hyundai', market: 'KOSPI' },
+  { symbol: '450080', nameKo: '두산로보틱스', nameEn: 'Doosan Robotics', market: 'KOSPI' },
+
+  // ── Additional KOSDAQ Stocks ─────────────────────────────────
+  { symbol: '122870', nameKo: 'YG엔터테인먼트', nameEn: 'YG Entertainment', market: 'KOSDAQ' },
+  { symbol: '067310', nameKo: '하나마이크론', nameEn: 'Hana Micron', market: 'KOSDAQ' },
+  { symbol: '060310', nameKo: '3S', nameEn: '3S Korea', market: 'KOSDAQ' },
+  { symbol: '383220', nameKo: 'F&F', nameEn: 'F&F Holdings', market: 'KOSPI' },
 ];
 
 export default KRX_STOCKS;
