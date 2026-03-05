@@ -39,6 +39,25 @@ class PriceText extends StatelessWidget {
             ? '▼'
             : '';
 
+    // Show placeholder when no live data available
+    if (price == 0 && change == 0 && changePercent == 0) {
+      return Column(
+        crossAxisAlignment: crossAxisAlignment,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '--',
+            style: TextStyle(
+              fontSize: priceFontSize,
+              fontWeight: FontWeight.w700,
+              color: colorScheme.secondary,
+              fontFamily: 'Inter',
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: crossAxisAlignment,
       mainAxisSize: MainAxisSize.min,

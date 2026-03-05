@@ -7,6 +7,7 @@ import app from './app.js';
 import env, { validateEnv } from './config/env.js';
 import { connectDB } from './config/db.js';
 import { setupWebSocket, shutdownWebSocket } from './services/websocket.service.js';
+import stockMasterService from './services/stock-master.service.js';
 import logger from './utils/logger.js';
 
 // Validate environment variables
@@ -33,6 +34,11 @@ async function start() {
 
     // Connect to MongoDB (after port is bound — non-blocking for deploy health)
     await connectDB();
+
+    // Initialize stock master data (download KIS master files → ~2500 stocks)
+    stockMasterService.init().catch((err) =>
+      logger.warn('Stock master init deferred:', err.message),
+    );
 
   } catch (error) {
     logger.error('Failed to start server:', error);

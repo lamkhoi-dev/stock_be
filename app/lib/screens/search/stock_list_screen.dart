@@ -22,11 +22,19 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
   bool _isLoading = true;
   String? _error;
   List<Map<String, dynamic>> _allStocks = [];
+  String _searchQuery = '';
+  final _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _fetchStocks();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchStocks() async {
@@ -36,12 +44,8 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
     });
     try {
       final api = ref.read(apiClientProvider);
-      final marketParam = _selectedMarket == 1
-          ? 'KOSPI'
-          : _selectedMarket == 2
-              ? 'KOSDAQ'
-              : 'all';
-      final response = await api.getStockList(sort: _sortBy, market: marketParam);
+      // Always fetch ALL stocks once; filter client-side
+      final response = await api.getStockList(sort: 'change', market: 'all');
       if (response.data['success'] == true) {
         final rawList = response.data['data'] as List;
         _allStocks = rawList.map((item) {
@@ -54,6 +58,8 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
             'price': m['price'] ?? 0,
             'change': m['change'] ?? 0,
             'changePercent': m['changePct'] ?? 0,
+            'volume': m['volume'] ?? 0,
+            'hasLiveData': m['hasLiveData'] ?? false,
           };
         }).toList();
       }
@@ -65,14 +71,42 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
 
   List<Map<String, dynamic>> get _filteredStocks {
     var list = List<Map<String, dynamic>>.from(_allStocks);
-    // Client-side sort (API already does this, but allows re-sorting without re-fetch)
-    if (_sortBy == 'change') {
-      list.sort((a, b) =>
-          ((b['changePercent'] as num).abs()).compareTo((a['changePercent'] as num).abs()));
-    } else if (_sortBy == 'volume') {
-      // Already sorted by API when sort=volume
+
+    // Market filter
+    if (_selectedMarket == 1) {
+      list = list.where((s) => s['exchange'] == 'KOSPI').toList();
+    } else if (_selectedMarket == 2) {
+      list = list.where((s) => s['exchange'] == 'KOSDAQ').toList();
+    }
+
+    // Local search filter
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      list = list.where((s) {
+        final symbol = (s['symbol'] as String).toLowerCase();
+        final nameKo = (s['nameKo'] as String).toLowerCase();
+        final nameEn = (s['nameEn'] as String).toLowerCase();
+        return symbol.contains(q) || nameKo.contains(q) || nameEn.contains(q);
+      }).toList();
+    }
+
+    // Sort
+    if (_sortBy == 'volume') {
+      list.sort((a, b) {
+        final aLive = a['hasLiveData'] == true ? 1 : 0;
+        final bLive = b['hasLiveData'] == true ? 1 : 0;
+        if (bLive != aLive) return bLive - aLive;
+        return ((b['volume'] as num?) ?? 0).compareTo((a['volume'] as num?) ?? 0);
+      });
     } else if (_sortBy == 'name') {
       list.sort((a, b) => (a['nameKo'] as String).compareTo(b['nameKo'] as String));
+    } else {
+      list.sort((a, b) {
+        final aLive = a['hasLiveData'] == true ? 1 : 0;
+        final bLive = b['hasLiveData'] == true ? 1 : 0;
+        if (bLive != aLive) return bLive - aLive;
+        return ((b['changePercent'] as num).abs()).compareTo((a['changePercent'] as num).abs());
+      });
     }
     return list;
   }
@@ -89,10 +123,35 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
           icon: const Icon(Icons.arrow_back_ios, size: 20),
           onPressed: () => context.pop(),
         ),
-        title: Text('${S.of(context).allStocks}${_allStocks.isNotEmpty ? ' (${_allStocks.length})' : ''}'),
+        title: Text('${S.of(context).allStocks}${_allStocks.isNotEmpty ? ' (${stocks.length})' : ''}'),
       ),
       body: Column(
         children: [
+          // Search bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _searchQuery = v.trim()),
+              decoration: InputDecoration(
+                hintText: S.of(context).searchStocks,
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _searchQuery = '');
+                        },
+                      )
+                    : null,
+                isDense: true,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
           // Filters
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -103,23 +162,19 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
               children: [
                 _FilterPill(label: S.of(context).all, isActive: _selectedMarket == 0, onTap: () {
                   setState(() => _selectedMarket = 0);
-                  _fetchStocks();
                 }),
                 const SizedBox(width: 8),
                 _FilterPill(label: 'KOSPI', isActive: _selectedMarket == 1, onTap: () {
                   setState(() => _selectedMarket = 1);
-                  _fetchStocks();
                 }),
                 const SizedBox(width: 8),
                 _FilterPill(label: 'KOSDAQ', isActive: _selectedMarket == 2, onTap: () {
                   setState(() => _selectedMarket = 2);
-                  _fetchStocks();
                 }),
                 const Spacer(),
                 PopupMenuButton<String>(
                   onSelected: (v) {
                     setState(() => _sortBy = v);
-                    _fetchStocks();
                   },
                   itemBuilder: (_) => [
                     PopupMenuItem(value: 'change', child: Text(S.of(context).sortChangePercent)),

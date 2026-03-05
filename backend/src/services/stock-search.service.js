@@ -9,7 +9,7 @@
  *  - Results are scored and sorted by relevance
  *  - Yahoo fallback fills gaps for stocks not in dictionary
  */
-import KRX_STOCKS from '../data/krx-stocks.js';
+import stockMasterService from './stock-master.service.js';
 import cacheService from './cache.service.js';
 import logger from '../utils/logger.js';
 
@@ -70,7 +70,8 @@ const stockSearchService = {
     const q = norm(query);
     const results = [];
 
-    for (const stock of KRX_STOCKS) {
+    const stocks = stockMasterService.getAllStocks();
+    for (const stock of stocks) {
       const score = scoreMatch(stock, q);
       if (score > 0) {
         results.push({ ...stock, score });

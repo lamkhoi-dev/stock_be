@@ -7,7 +7,7 @@ import kisService from '../services/kis.service.js';
 import yahooService from '../services/yahoo.service.js';
 import indicatorsService from '../services/indicators.service.js';
 import stockSearchService from '../services/stock-search.service.js';
-import KRX_STOCKS from '../data/krx-stocks.js';
+import stockMasterService from '../services/stock-master.service.js';
 import cacheService from '../services/cache.service.js';
 import logger from '../utils/logger.js';
 
@@ -175,10 +175,18 @@ export const getStockList = async (req, res, next) => {
   try {
     const { sort = 'change', market = 'all' } = req.query;
 
-    // 1. Start with KRX dictionary as the base (150+ stocks)
+    // Check response cache (5 min)
+    const cacheKey = `stocklist_${market}_${sort}`;
+    const cached = cacheService.get(cacheKey, 5 * 60_000);
+    if (cached) return res.json(cached);
+
+    // Ensure master data is loaded
+    if (!stockMasterService.isReady()) await stockMasterService.init();
+
+    // 1. Start with ALL stocks from master service (~2500 real stocks)
+    const masterStocks = stockMasterService.getAllStocks();
     const stockMap = new Map();
-    for (const entry of KRX_STOCKS) {
-      // Filter by market early if requested
+    for (const entry of masterStocks) {
       if (market === 'KOSPI' && entry.market !== 'KOSPI') continue;
       if (market === 'KOSDAQ' && entry.market !== 'KOSDAQ') continue;
       stockMap.set(entry.symbol, {
@@ -195,62 +203,25 @@ export const getStockList = async (req, res, next) => {
       });
     }
 
-    // 2. Fetch live data from KIS rankings to enrich
+    // 2. Fetch live data from KIS rankings to enrich top movers
     const results = await Promise.allSettled([
       kisService.getFluctuationRanking('1'),  // Gainers
       kisService.getFluctuationRanking('3'),  // Losers
       kisService.getVolumeRanking(),           // Volume leaders
     ]);
 
-    // 3. Merge live KIS data — update existing entries or add new ones
+    // 3. Merge live KIS data into master list
     for (const result of results) {
       if (result.status === 'fulfilled') {
         for (const stock of result.value.data) {
           const existing = stockMap.get(stock.symbol);
           if (existing) {
-            // Enrich dictionary entry with live data
             existing.price = stock.price;
             existing.change = stock.change;
             existing.changePct = stock.changePct;
             existing.volume = stock.volume;
             existing.tradingValue = stock.tradingValue || 0;
             existing.hasLiveData = true;
-          } else {
-            // KIS returned a stock not in dictionary — add it
-            if (market === 'KOSPI' && (stock.symbol.startsWith('4') || stock.symbol.startsWith('3'))) continue;
-            if (market === 'KOSDAQ' && !(stock.symbol.startsWith('4') || stock.symbol.startsWith('3'))) continue;
-            stockMap.set(stock.symbol, {
-              ...stock,
-              englishName: '',
-              exchange: (stock.symbol.startsWith('4') || stock.symbol.startsWith('3')) ? 'KOSDAQ' : 'KOSPI',
-              hasLiveData: true,
-            });
-          }
-        }
-      }
-    }
-
-    // 3b. Batch-fetch prices for stocks that still have no live data
-    //     KIS rate limit: 1 req / 300ms → fetch up to 40 stocks (~12s)
-    const missingStocks = Array.from(stockMap.values()).filter(s => !s.hasLiveData);
-    if (missingStocks.length > 0) {
-      const BATCH_LIMIT = 40; // max stocks to fetch individually (~12s at 300ms each)
-      const toFetch = missingStocks.slice(0, BATCH_LIMIT);
-      const batchResults = await Promise.allSettled(
-        toFetch.map(s => kisService.getPrice(s.symbol).catch(() => null))
-      );
-      for (let i = 0; i < batchResults.length; i++) {
-        const result = batchResults[i];
-        if (result.status === 'fulfilled' && result.value?.data) {
-          const d = result.value.data;
-          const entry = stockMap.get(toFetch[i].symbol);
-          if (entry) {
-            entry.price = d.price || 0;
-            entry.change = d.change || 0;
-            entry.changePct = d.changePct || 0;
-            entry.volume = d.volume || 0;
-            entry.tradingValue = d.tradingValue || 0;
-            entry.hasLiveData = true;
           }
         }
       }
@@ -264,16 +235,17 @@ export const getStockList = async (req, res, next) => {
     } else if (sort === 'name') {
       stocks.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     } else {
-      // Default: sort by absolute change %, live data first
       stocks.sort((a, b) => (b.hasLiveData ? 1 : 0) - (a.hasLiveData ? 1 : 0) || Math.abs(b.changePct || 0) - Math.abs(a.changePct || 0));
     }
 
-    res.json({
+    const body = {
       success: true,
       data: stocks,
       total: stocks.length,
-      source: 'kis+dictionary',
-    });
+      source: 'kis+master',
+    };
+    cacheService.set(cacheKey, body);
+    res.json(body);
   } catch (err) {
     next(err);
   }
