@@ -105,7 +105,7 @@ Now I have comprehensive data. Here's the full comparison of all viable options 
 | **Đánh giá** | **Không phù hợp** cho Korean stocks |
 
 ---
-
+ 
 ## Bảng so sánh nhanh
 
 | Nguồn | Giá KRX | Realtime | Historical | Indicators | Node.js native | Đánh giá |
