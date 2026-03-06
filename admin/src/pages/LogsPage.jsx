@@ -87,7 +87,7 @@ export default function LogsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-xl font-bold text-white">System Logs</h1>
         <button
           onClick={handleExport}

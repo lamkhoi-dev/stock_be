@@ -110,11 +110,11 @@ export default function UsersPage() {
               <tr className="border-b border-navy-600 text-gray-400 text-left">
                 <th className="px-4 py-3 font-medium">User</th>
                 <th className="px-4 py-3 font-medium">Plan</th>
-                <th className="px-4 py-3 font-medium">Role</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Role</th>
                 <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Credits</th>
-                <th className="px-4 py-3 font-medium">Last Login</th>
-                <th className="px-4 py-3 font-medium">Joined</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Credits</th>
+                <th className="px-4 py-3 font-medium hidden lg:table-cell">Last Login</th>
+                <th className="px-4 py-3 font-medium hidden md:table-cell">Joined</th>
               </tr>
             </thead>
             <tbody>
@@ -159,7 +159,7 @@ export default function UsersPage() {
                         <span className="text-gray-500 text-xs">Free</span>
                       )}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 hidden md:table-cell">
                       {u.role === 'admin' ? (
                         <span className="inline-flex items-center gap-1 text-accent text-xs">
                           <Shield size={12} /> Admin
@@ -179,13 +179,13 @@ export default function UsersPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-400">
+                    <td className="px-4 py-3 text-gray-400 hidden lg:table-cell">
                       {u.subscription?.credits ?? 0}
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
+                    <td className="px-4 py-3 text-gray-400 text-xs hidden lg:table-cell">
                       {u.lastLoginAt ? format(new Date(u.lastLoginAt), 'MMM dd, HH:mm') : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
+                    <td className="px-4 py-3 text-gray-400 text-xs hidden md:table-cell">
                       {u.createdAt ? format(new Date(u.createdAt), 'MMM dd, yyyy') : '—'}
                     </td>
                   </tr>

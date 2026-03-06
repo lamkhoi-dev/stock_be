@@ -184,7 +184,7 @@ export default function UserDetailPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-navy-800 border border-navy-600 rounded-xl p-4 text-center">
           <Star className="mx-auto mb-2 text-yellow-400" size={20} />
           <p className="text-lg font-bold text-white">{stats.watchlistCount}</p>

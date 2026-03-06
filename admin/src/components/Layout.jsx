@@ -14,8 +14,8 @@ import { useState } from 'react';
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/users', icon: Users, label: 'Users' },
-  { to: '/logs', icon: ScrollText, label: 'Logs' },
-  { to: '/config', icon: Settings, label: 'Config' },
+  { to: '/logs', icon: ScrollText, label: 'Logs', dimmed: true },
+  { to: '/config', icon: Settings, label: 'Config', dimmed: true },
 ];
 
 export default function Layout() {
@@ -61,15 +61,17 @@ export default function Layout() {
 
         {/* Nav */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, icon: Icon, label, dimmed }) => (
             <NavLink
               key={to}
               to={to}
               className={linkClass}
               onClick={() => setSidebarOpen(false)}
             >
-              <Icon size={18} />
-              {label}
+              <span className={`flex items-center gap-3 ${dimmed ? 'opacity-50' : ''}`}>
+                <Icon size={18} />
+                {label}
+              </span>
             </NavLink>
           ))}
         </nav>
