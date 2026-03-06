@@ -312,7 +312,7 @@ const kisService = {
   // ────────────────────────────────────────────────────
   async getMinuteChart(symbol, { time, maxPages = 6 } = {}) {
     const code = stripSymbolSuffix(symbol);
-    const startTime = time || (isMarketHours() ? getKSTTimeString() : '160000');
+    const startTime = time || (isMarketHours() ? getKSTTimeString() : '153000');
     const pages = Math.min(maxPages, 10);
 
     const cacheKey = `kis_min_${code}_${startTime.substring(0, 4)}`;
@@ -383,12 +383,18 @@ const kisService = {
           if (page === 0) throw new Error(data.msg1 || 'KIS minute chart error');
           break;
         }
-        const records = (data.output2 || []).filter(
-          (o) => o.stck_cntg_hour && safeInt(o.cntg_vol) > 0,
+        const rawRecords = (data.output2 || []).filter(
+          (o) => o.stck_cntg_hour,
         );
-        if (!records.length) break;
-        allRecords.push(...records);
-        nextTime = getNextTime(records);
+        if (!rawRecords.length) break;
+
+        // Keep records with actual volume for the chart
+        const withVolume = rawRecords.filter((o) => safeInt(o.cntg_vol) > 0);
+        allRecords.push(...withVolume);
+
+        // Use RAW records (not filtered) for pagination so we don't
+        // break early when an entire page is after-hours / no-trade candles
+        nextTime = getNextTime(rawRecords);
         if (!nextTime) break;
       } catch (pageErr) {
         logger.warn(
