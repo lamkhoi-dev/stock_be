@@ -348,24 +348,43 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _enrichWatchlistPrices(ApiClient api) async {
-    try {
-      final symbols = _watchlistItems.map((w) => w['symbol'] as String).toList();
-      final response = await api.getBatchPrices(symbols);
-      if (response.data['success'] == true && mounted) {
-        final prices = response.data['data'] as Map<String, dynamic>;
-        setState(() {
-          for (final item in _watchlistItems) {
-            final sym = item['symbol'] as String;
-            if (prices.containsKey(sym)) {
-              final p = prices[sym] as Map<String, dynamic>;
-              item['price'] = (p['price'] as num?)?.toDouble() ?? 0.0;
-              item['change'] = (p['change'] as num?)?.toDouble() ?? 0.0;
-              item['changePercent'] = (p['changePct'] as num?)?.toDouble() ?? 0.0;
-            }
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        // Only request prices for items still missing data
+        final needPrice = _watchlistItems
+            .where((w) => (w['price'] as double?) == 0.0)
+            .map((w) => w['symbol'] as String)
+            .toList();
+        if (needPrice.isEmpty) return; // All items have prices
+
+        final response = await api.getBatchPrices(needPrice);
+        if (response.data['success'] == true && mounted) {
+          final prices = response.data['data'] as Map<String, dynamic>;
+          if (prices.isNotEmpty) {
+            setState(() {
+              for (final item in _watchlistItems) {
+                final sym = item['symbol'] as String;
+                if (prices.containsKey(sym)) {
+                  final p = prices[sym] as Map<String, dynamic>;
+                  item['price'] = (p['price'] as num?)?.toDouble() ?? 0.0;
+                  item['change'] = (p['change'] as num?)?.toDouble() ?? 0.0;
+                  item['changePercent'] = (p['changePct'] as num?)?.toDouble() ?? 0.0;
+                }
+              }
+            });
           }
-        });
+          // Check if all items now have prices
+          final stillMissing = _watchlistItems
+              .where((w) => (w['price'] as double?) == 0.0)
+              .length;
+          if (stillMissing == 0) return;
+        }
+      } catch (_) {}
+      // Wait before retry
+      if (attempt < 2 && mounted) {
+        await Future.delayed(const Duration(seconds: 2));
       }
-    } catch (_) {}
+    }
   }
 
   Future<void> _handleRefresh() async {

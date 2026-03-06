@@ -32,6 +32,7 @@ class WatchlistState {
 class WatchlistNotifier extends StateNotifier<WatchlistState> {
   WatchlistNotifier(this._api) : super(const WatchlistState());
   final ApiClient _api;
+  bool _isEnriching = false;
 
   /// Map backend watchlist item to WatchlistItem model.
   WatchlistItem _mapItem(Map<String, dynamic> w) {
@@ -49,11 +50,12 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
     );
   }
 
-  /// Load watchlist with optional live prices.
+  /// Load watchlist — fast 2-step: items first, then prices via batch endpoint.
   Future<void> loadWatchlist({bool withPrices = true}) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final response = await _api.getWatchlist(withPrices: withPrices);
+      // Step 1: Load items WITHOUT prices (fast response)
+      final response = await _api.getWatchlist(withPrices: false);
       if (response.data['success'] == true) {
         final rawData = response.data['data'];
         // Backend returns {items: [...], count: n} or possibly a raw list
@@ -69,11 +71,68 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
             .map((w) => _mapItem(w as Map<String, dynamic>))
             .toList();
         state = state.copyWith(items: items, isLoading: false);
+
+        // Step 2: Enrich with live prices via batch endpoint (background)
+        if (items.isNotEmpty && withPrices) {
+          _enrichPrices(); // Fire-and-forget — prices fill in progressively
+        }
       } else {
         state = state.copyWith(isLoading: false);
       }
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  /// Enrich current items with live prices from batch-prices endpoint.
+  /// Retries up to 2 times for missing items with a short delay.
+  Future<void> _enrichPrices() async {
+    if (_isEnriching) return;
+    _isEnriching = true;
+    try {
+      for (int attempt = 0; attempt < 3; attempt++) {
+        try {
+          final items = state.items;
+          // Only request prices for items still missing data
+          final needPrice = items
+              .where((w) => w.currentPrice == null || w.currentPrice == 0)
+              .map((w) => w.symbol)
+              .toList();
+          if (needPrice.isEmpty) return; // All items have prices
+
+          final response = await _api.getBatchPrices(needPrice);
+          if (response.data['success'] == true) {
+            final prices = response.data['data'] as Map<String, dynamic>;
+            if (prices.isNotEmpty) {
+              final enriched = state.items.map((item) {
+                if (prices.containsKey(item.symbol)) {
+                  final p = prices[item.symbol] as Map<String, dynamic>;
+                  return item.copyWith(
+                    currentPrice: (p['price'] as num?)?.toDouble(),
+                    change: (p['change'] as num?)?.toDouble(),
+                    changePercent: (p['changePct'] as num?)?.toDouble(),
+                  );
+                }
+                return item;
+              }).toList();
+              state = state.copyWith(items: enriched);
+            }
+            // Check if all items now have prices
+            final stillMissing = state.items
+                .where((w) => w.currentPrice == null || w.currentPrice == 0)
+                .length;
+            if (stillMissing == 0) return; // All done
+          }
+        } catch (_) {
+          // Price enrichment failure is not critical
+        }
+        // Wait before retry
+        if (attempt < 2) {
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
+    } finally {
+      _isEnriching = false;
     }
   }
 
