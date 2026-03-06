@@ -16,7 +16,7 @@ const aiController = {
    */
   async analyze(req, res, next) {
     try {
-      const { symbol, level = 'basic', model = 'gemini' } = req.body;
+      const { symbol, level = 'basic', model = 'gemini', language = 'en' } = req.body;
 
       if (!symbol) {
         throw ApiError.badRequest('Symbol is required');
@@ -41,9 +41,9 @@ const aiController = {
       // Perform analysis
       let result;
       if (level === 'basic') {
-        result = await aiService.analyzeBasic(symbol);
+        result = await aiService.analyzeBasic(symbol, language);
       } else {
-        result = await aiService.analyzePro(symbol, model);
+        result = await aiService.analyzePro(symbol, model, language);
       }
 
       // Save to database

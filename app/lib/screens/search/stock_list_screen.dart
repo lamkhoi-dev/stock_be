@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,17 +26,89 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
   List<Map<String, dynamic>> _allStocks = [];
   String _searchQuery = '';
   final _searchController = TextEditingController();
+  final _scrollController = ScrollController();
+  final Set<String> _loadedSymbols = {};
+  final Set<String> _loadingSymbols = {};
+  Timer? _scrollDebounce;
+  static const double _itemHeight = 65.0;
 
   @override
   void initState() {
     super.initState();
     _fetchStocks();
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
+    _scrollDebounce?.cancel();
     super.dispose();
+  }
+
+  void _onScroll() {
+    _scrollDebounce?.cancel();
+    _scrollDebounce = Timer(const Duration(milliseconds: 150), () {
+      _loadVisiblePrices();
+    });
+  }
+
+  void _loadVisiblePrices() {
+    if (_allStocks.isEmpty || !_scrollController.hasClients) return;
+
+    final stocks = _filteredStocks;
+    final scrollOffset = _scrollController.offset;
+    final viewportHeight = _scrollController.position.viewportDimension;
+
+    final firstVisible = (scrollOffset / _itemHeight).floor();
+    final lastVisible = ((scrollOffset + viewportHeight) / _itemHeight).ceil();
+
+    final start = (firstVisible - 5).clamp(0, stocks.length);
+    final end = (lastVisible + 5).clamp(0, stocks.length);
+
+    final symbolsToLoad = <String>[];
+    for (int i = start; i < end; i++) {
+      final s = stocks[i];
+      final symbol = s['symbol'] as String;
+      if (s['hasLiveData'] != true &&
+          !_loadedSymbols.contains(symbol) &&
+          !_loadingSymbols.contains(symbol)) {
+        symbolsToLoad.add(symbol);
+      }
+    }
+
+    if (symbolsToLoad.isNotEmpty) {
+      _fetchBatchPrices(symbolsToLoad);
+    }
+  }
+
+  Future<void> _fetchBatchPrices(List<String> symbols) async {
+    _loadingSymbols.addAll(symbols);
+    try {
+      final api = ref.read(apiClientProvider);
+      final response = await api.getBatchPrices(symbols);
+      if (response.data['success'] == true) {
+        final prices = response.data['data'] as Map<String, dynamic>;
+        if (mounted && prices.isNotEmpty) {
+          setState(() {
+            for (final stock in _allStocks) {
+              final sym = stock['symbol'] as String;
+              if (prices.containsKey(sym)) {
+                final p = prices[sym] as Map<String, dynamic>;
+                stock['price'] = (p['price'] as num?)?.toDouble() ?? stock['price'];
+                stock['change'] = (p['change'] as num?)?.toDouble() ?? stock['change'];
+                stock['changePercent'] = (p['changePct'] as num?)?.toDouble() ?? stock['changePercent'];
+                stock['volume'] = p['volume'] ?? stock['volume'];
+                stock['hasLiveData'] = true;
+                _loadedSymbols.add(sym);
+              }
+            }
+          });
+        }
+      }
+    } catch (_) {}
+    _loadingSymbols.removeAll(symbols);
   }
 
   Future<void> _fetchStocks() async {
@@ -66,7 +140,11 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
     } catch (e) {
       _error = S.of(context).failedLoadStocks;
     }
-    if (mounted) setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+      // Load prices for initially visible stocks
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadVisiblePrices());
+    }
   }
 
   List<Map<String, dynamic>> get _filteredStocks {
@@ -224,6 +302,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
                             color: colorScheme.primary,
                             backgroundColor: colorScheme.surface,
                             child: ListView.separated(
+                              controller: _scrollController,
                               itemCount: stocks.length,
                               separatorBuilder: (_, __) => Divider(
                                 height: 1,

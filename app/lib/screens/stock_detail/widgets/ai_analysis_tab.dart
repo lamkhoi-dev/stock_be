@@ -8,6 +8,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../models/ai_analysis.dart';
 import '../../../providers/auth_provider.dart';
 import '../../../providers/ai_provider.dart';
+import '../../../providers/settings_provider.dart';
 
 // ═══════════════════════════════════════════════════════════════
 //  AI ANALYSIS TAB — Terminal-style layout
@@ -68,8 +69,9 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
     });
     _typingTimer?.cancel();
 
+    final lang = ref.read(settingsProvider).language;
     final result =
-        await ref.read(aiProvider.notifier).analyzeBasic(widget.symbol);
+        await ref.read(aiProvider.notifier).analyzeBasic(widget.symbol, language: lang);
     if (result != null && mounted) {
       _startTypingAnimation(result.sections?.summary ?? result.signal);
     }
@@ -83,9 +85,10 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
     });
     _typingTimer?.cancel();
 
+    final lang = ref.read(settingsProvider).language;
     final result = await ref
         .read(aiProvider.notifier)
-        .analyzePro(widget.symbol, model: model);
+        .analyzePro(widget.symbol, model: model, language: lang);
     if (result != null && mounted) {
       _startTypingAnimation(result.sections?.summary ?? result.signal);
     }

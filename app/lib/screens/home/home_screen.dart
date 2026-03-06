@@ -309,7 +309,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
     try {
-      final response = await api.getWatchlist(withPrices: true);
+      // Step 1: Load watchlist items without prices (fast)
+      final response = await api.getWatchlist(withPrices: false);
       if (response.data['success'] == true) {
         final data = response.data['data'];
         List items;
@@ -334,9 +335,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 (item['changePercent'] as num?)?.toDouble() ?? 0.0,
           };
         }).toList();
+        if (mounted) setState(() => _isLoadingWatchlist = false);
+
+        // Step 2: Fetch prices in background for visible items
+        if (_watchlistItems.isNotEmpty) {
+          _enrichWatchlistPrices(api);
+        }
+        return;
       }
     } catch (_) {}
     if (mounted) setState(() => _isLoadingWatchlist = false);
+  }
+
+  Future<void> _enrichWatchlistPrices(ApiClient api) async {
+    try {
+      final symbols = _watchlistItems.map((w) => w['symbol'] as String).toList();
+      final response = await api.getBatchPrices(symbols);
+      if (response.data['success'] == true && mounted) {
+        final prices = response.data['data'] as Map<String, dynamic>;
+        setState(() {
+          for (final item in _watchlistItems) {
+            final sym = item['symbol'] as String;
+            if (prices.containsKey(sym)) {
+              final p = prices[sym] as Map<String, dynamic>;
+              item['price'] = (p['price'] as num?)?.toDouble() ?? 0.0;
+              item['change'] = (p['change'] as num?)?.toDouble() ?? 0.0;
+              item['changePercent'] = (p['changePct'] as num?)?.toDouble() ?? 0.0;
+            }
+          }
+        });
+      }
+    } catch (_) {}
   }
 
   Future<void> _handleRefresh() async {

@@ -14,6 +14,7 @@ import {
   getFluctuationRanking,
   getVolumeRanking,
   getStockList,
+  getBatchPrices,
   getInvestor,
   getIndex,
   getMarketOverview,
@@ -44,6 +45,9 @@ router.get('/ranking/volume', optionalAuth, getVolumeRanking);
 
 // ─── Stock List (merged rankings) ────────────────────
 router.get('/list', optionalAuth, getStockList);
+
+// ─── Batch Prices ────────────────────────────────────
+router.post('/batch-prices', optionalAuth, getBatchPrices);
 
 // ─── Stock Detail ────────────────────────────────────
 router.get('/price/:symbol', optionalAuth, getPrice);

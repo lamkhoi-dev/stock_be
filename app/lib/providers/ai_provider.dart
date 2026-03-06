@@ -62,10 +62,10 @@ class AINotifier extends StateNotifier<AIState> {
   }
 
   /// Run basic AI analysis for a stock.
-  Future<AIAnalysis?> analyzeBasic(String symbol) async {
+  Future<AIAnalysis?> analyzeBasic(String symbol, {String language = 'en'}) async {
     state = state.copyWith(isAnalyzing: true, error: null);
     try {
-      final response = await _api.analyzeStock(symbol, level: 'basic');
+      final response = await _api.analyzeStock(symbol, level: 'basic', language: language);
       if (response.data['success'] == true) {
         final data = response.data['data'] as Map<String, dynamic>;
         final a = data['analysis'] as Map<String, dynamic>? ?? {};
@@ -117,11 +117,11 @@ class AINotifier extends StateNotifier<AIState> {
 
   /// Run pro AI analysis for a stock.
   Future<AIAnalysis?> analyzePro(String symbol,
-      {String model = 'gemini'}) async {
+      {String model = 'gemini', String language = 'en'}) async {
     state = state.copyWith(isAnalyzing: true, error: null);
     try {
       final response =
-          await _api.analyzeStock(symbol, level: 'pro', model: model);
+          await _api.analyzeStock(symbol, level: 'pro', model: model, language: language);
       if (response.data['success'] == true) {
         final data = response.data['data'] as Map<String, dynamic>;
         final a = data['analysis'] as Map<String, dynamic>? ?? {};

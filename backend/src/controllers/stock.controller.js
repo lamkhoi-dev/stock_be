@@ -379,6 +379,44 @@ export const getNews = async (req, res, next) => {
 };
 
 // ═══════════════════════════════════════════════════════
+//  BATCH PRICES
+// ═══════════════════════════════════════════════════════
+
+/**
+ * POST /api/stocks/batch-prices
+ * Fetch live prices for a batch of symbols (max 20).
+ * Body: { symbols: ["005930", "000660", ...] }
+ */
+export const getBatchPrices = async (req, res, next) => {
+  try {
+    const { symbols } = req.body;
+    if (!Array.isArray(symbols) || symbols.length === 0) {
+      return res.json({ success: true, data: {} });
+    }
+    const batch = symbols.slice(0, 20);
+    const result = {};
+
+    for (const symbol of batch) {
+      try {
+        const priceResult = await kisService.getPrice(symbol);
+        result[symbol] = {
+          price: priceResult.data.price,
+          change: priceResult.data.change,
+          changePct: priceResult.data.changePct,
+          volume: priceResult.data.volume,
+        };
+      } catch {
+        // Skip failed symbols
+      }
+    }
+
+    res.json({ success: true, data: result });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// ═══════════════════════════════════════════════════════
 //  TECHNICAL INDICATORS
 // ═══════════════════════════════════════════════════════
 

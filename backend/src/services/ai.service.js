@@ -82,10 +82,19 @@ export function reinitializeClients() {
   logger.info('AI clients reinitialized with updated API keys', { source: 'ai.service' });
 }
 
+// ─── Language Helper ─────────────────────────────────
+
+const LANG_NAMES = { en: 'English', ko: 'Korean (한국어)', vi: 'Vietnamese (Tiếng Việt)' };
+
+function getLangName(code) {
+  return LANG_NAMES[code] || 'English';
+}
+
 // ─── Prompt Templates ────────────────────────────────
 
-function buildBasicPrompt(symbol, stockData, indicators) {
-  return `You are a Korean stock market analyst AI. Analyze the following stock data and provide a structured terminal-style analysis in English.
+function buildBasicPrompt(symbol, stockData, indicators, language = 'en') {
+  const langName = getLangName(language);
+  return `You are a Korean stock market analyst AI. Analyze the following stock data and provide a structured terminal-style analysis in ${langName}.
 
 Stock: ${symbol} (${stockData.name || symbol})
 Current Price: ₩${stockData.price?.toLocaleString()}
@@ -106,28 +115,29 @@ Technical Indicators:
 - Bollinger Band Position: ${indicators.bollingerBands?.position}% (Lower: ₩${indicators.bollingerBands?.lower?.toLocaleString()}, Upper: ₩${indicators.bollingerBands?.upper?.toLocaleString()})
 - Overall Signal: ${indicators.summary?.overall}
 
-Provide your analysis in the following JSON format (respond ONLY with valid JSON, no markdown). ALL text values MUST be in English:
+Provide your analysis in the following JSON format (respond ONLY with valid JSON, no markdown). ALL text values MUST be in ${langName}:
 {
   "signal": "strong_buy|buy|hold|sell|strong_sell",
   "confidence": <number 0-100>,
   "sceScore": <number 0-100, Stock Comprehensive Evaluation score based on technical + fundamental factors>,
-  "marketSentiment": "<1-2 word sentiment label in English, e.g. Bullish, Bearish, Neutral, Cautious>",
-  "actionStrategy": "<action recommendation in English, e.g. Buy - technical indicators turning bullish, or Hold - wait for confirmation>",
-  "investmentTiming": "<specific entry/exit timing advice in English, 2-3 sentences>",
-  "futureForecast": "<short-term price forecast in English with target price ranges, 2-3 sentences>",
-  "strategy": "<detailed trading strategy in English, 3-5 sentences covering entry points, position sizing, stop-loss>",
-  "risk": "<risk assessment in English, 3-5 sentences covering key risk factors and mitigation>",
-  "trend": "<trend analysis in English, 3-5 sentences covering current trend, momentum, support/resistance levels>",
-  "summary": "<executive summary paragraph in English, 3-5 sentences>"
+  "marketSentiment": "<1-2 word sentiment label in ${langName}, e.g. Bullish, Bearish, Neutral, Cautious>",
+  "actionStrategy": "<action recommendation in ${langName}, e.g. Buy - technical indicators turning bullish, or Hold - wait for confirmation>",
+  "investmentTiming": "<specific entry/exit timing advice in ${langName}, 2-3 sentences>",
+  "futureForecast": "<short-term price forecast in ${langName} with target price ranges, 2-3 sentences>",
+  "strategy": "<detailed trading strategy in ${langName}, 3-5 sentences covering entry points, position sizing, stop-loss>",
+  "risk": "<risk assessment in ${langName}, 3-5 sentences covering key risk factors and mitigation>",
+  "trend": "<trend analysis in ${langName}, 3-5 sentences covering current trend, momentum, support/resistance levels>",
+  "summary": "<executive summary paragraph in ${langName}, 3-5 sentences>"
 }`;
 }
 
-function buildProPrompt(symbol, stockData, indicators, historyBars) {
+function buildProPrompt(symbol, stockData, indicators, historyBars, language = 'en') {
+  const langName = getLangName(language);
   const recentBars = historyBars.slice(-30).map(b =>
     `${b.time}: O=${b.open} H=${b.high} L=${b.low} C=${b.close} V=${b.volume}`
   ).join('\n');
 
-  return `You are an expert Korean stock market analyst AI. Provide a comprehensive professional analysis in English.
+  return `You are an expert Korean stock market analyst AI. Provide a comprehensive professional analysis in ${langName}.
 
 ═══ Stock Information ═══
 Stock: ${symbol} (${stockData.name || symbol})
@@ -151,19 +161,19 @@ Overall Signal: ${indicators.summary?.overall} (Score: ${indicators.summary?.sco
 ═══ Recent 30-Day OHLCV ═══
 ${recentBars}
 
-Provide a DETAILED professional analysis in the following JSON format (respond ONLY with valid JSON, no markdown). ALL text values MUST be in English:
+Provide a DETAILED professional analysis in the following JSON format (respond ONLY with valid JSON, no markdown). ALL text values MUST be in ${langName}:
 {
   "signal": "strong_buy|buy|hold|sell|strong_sell",
   "confidence": <number 0-100>,
   "sceScore": <number 0-100, Stock Comprehensive Evaluation score based on technical + fundamental + momentum factors>,
-  "marketSentiment": "<1-2 word sentiment label in English, e.g. Very Bullish, Bearish, Neutral, Cautious>",
-  "actionStrategy": "<specific action recommendation in English with brief detail, e.g. Strong Buy - technical indicators turning bullish>",
-  "investmentTiming": "<investment timing advice in English, 2-3 sentences with specific entry/exit points>",
-  "futureForecast": "<short/mid-term forecast in English with price targets, 2-3 sentences>",
-  "strategy": "<detailed trading strategy in English, 5-8 sentences covering entry points, position sizing, stop-loss, take-profit levels>",
-  "risk": "<comprehensive risk assessment in English, 5-8 sentences covering market risk, sector risk, company-specific risk, mitigation strategies>",
-  "trend": "<detailed trend analysis in English, 5-8 sentences covering current trend direction, momentum strength, volume confirmation, support/resistance levels, MA crossovers, chart patterns>",
-  "summary": "<executive summary in English, 4-6 sentences covering overall assessment>",
+  "marketSentiment": "<1-2 word sentiment label in ${langName}, e.g. Very Bullish, Bearish, Neutral, Cautious>",
+  "actionStrategy": "<specific action recommendation in ${langName} with brief detail, e.g. Strong Buy - technical indicators turning bullish>",
+  "investmentTiming": "<investment timing advice in ${langName}, 2-3 sentences with specific entry/exit points>",
+  "futureForecast": "<short/mid-term forecast in ${langName} with price targets, 2-3 sentences>",
+  "strategy": "<detailed trading strategy in ${langName}, 5-8 sentences covering entry points, position sizing, stop-loss, take-profit levels>",
+  "risk": "<comprehensive risk assessment in ${langName}, 5-8 sentences covering market risk, sector risk, company-specific risk, mitigation strategies>",
+  "trend": "<detailed trend analysis in ${langName}, 5-8 sentences covering current trend direction, momentum strength, volume confirmation, support/resistance levels, MA crossovers, chart patterns>",
+  "summary": "<executive summary in ${langName}, 4-6 sentences covering overall assessment>",
   "keyLevels": {
     "support": [<support level 1>, <support level 2>],
     "resistance": [<resistance level 1>, <resistance level 2>]
@@ -172,7 +182,7 @@ Provide a DETAILED professional analysis in the following JSON format (respond O
     "upside": <target price if bullish>,
     "downside": <target price if bearish>
   },
-  "timeframe": "<recommended investment timeframe in English>"
+  "timeframe": "<recommended investment timeframe in ${langName}>"
 }`;
 }
 
@@ -181,9 +191,10 @@ Provide a DETAILED professional analysis in the following JSON format (respond O
 /**
  * Basic analysis using Gemini Flash
  * @param {string} symbol
+ * @param {string} [language='en']
  * @returns {Promise<Object>} Analysis result
  */
-async function analyzeBasic(symbol) {
+async function analyzeBasic(symbol, language = 'en') {
   return withRetry(async () => {
     const startTime = Date.now();
     const code = stripSymbolSuffix(symbol);
@@ -194,7 +205,7 @@ async function analyzeBasic(symbol) {
 
     const stockData = priceResult.data;
     const indicators = indicatorResult.data;
-    const prompt = buildBasicPrompt(code, stockData, indicators);
+    const prompt = buildBasicPrompt(code, stockData, indicators, language);
 
     let analysisText;
     let modelUsed = 'gemini';
@@ -284,9 +295,10 @@ async function analyzeBasic(symbol) {
  * Pro analysis using Gemini Pro or GPT-4
  * @param {string} symbol
  * @param {string} [preferredModel='gemini'] - 'gemini' or 'openai'
+ * @param {string} [language='en']
  * @returns {Promise<Object>} Detailed analysis
  */
-async function analyzePro(symbol, preferredModel = 'gemini') {
+async function analyzePro(symbol, preferredModel = 'gemini', language = 'en') {
   return withRetry(async () => {
     const startTime = Date.now();
     const code = stripSymbolSuffix(symbol);
@@ -299,7 +311,7 @@ async function analyzePro(symbol, preferredModel = 'gemini') {
   const stockData = priceResult.data;
   const indicators = indicatorResult.data;
   const historyBars = chartResult.data || [];
-  const prompt = buildProPrompt(code, stockData, indicators, historyBars);
+  const prompt = buildProPrompt(code, stockData, indicators, historyBars, language);
 
   let analysisText;
   let modelUsed = preferredModel;

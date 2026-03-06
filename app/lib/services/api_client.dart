@@ -207,6 +207,9 @@ class ApiClient {
       _dio.get('/stocks/indicators/$symbol/history',
           queryParameters: {'period': period});
 
+  Future<Response> getBatchPrices(List<String> symbols) =>
+      _dio.post('/stocks/batch-prices', data: {'symbols': symbols});
+
   Future<Response> getStockNews(String symbol) =>
       _dio.get('/stocks/news/$symbol');
 
@@ -231,9 +234,9 @@ class ApiClient {
 
   // ─── AI Analysis ───────────────────────────────
   Future<Response> analyzeStock(String symbol,
-          {String level = 'basic', String model = 'gemini'}) =>
+          {String level = 'basic', String model = 'gemini', String language = 'en'}) =>
       _dio.post('/ai/analyze',
-          data: {'symbol': symbol, 'level': level, 'model': model});
+          data: {'symbol': symbol, 'level': level, 'model': model, 'language': language});
 
   Future<Response> getAIAnalysis(String id) => _dio.get('/ai/analysis/$id');
 
