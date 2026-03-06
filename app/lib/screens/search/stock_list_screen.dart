@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,57 +27,50 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
   final _scrollController = ScrollController();
   final Set<String> _loadedSymbols = {};
   final Set<String> _loadingSymbols = {};
-  Timer? _scrollDebounce;
-  static const double _itemHeight = 65.0;
+
+  /// Number of stocks currently visible (paginated)
+  int _visibleCount = 50;
+  static const int _pageSize = 50;
+  bool _isLoadingMore = false;
 
   @override
   void initState() {
     super.initState();
     _fetchStocks();
-    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
-    _scrollDebounce?.cancel();
     super.dispose();
   }
 
-  void _onScroll() {
-    _scrollDebounce?.cancel();
-    _scrollDebounce = Timer(const Duration(milliseconds: 150), () {
-      _loadVisiblePrices();
-    });
-  }
-
-  void _loadVisiblePrices() {
-    if (_allStocks.isEmpty || !_scrollController.hasClients) return;
+  /// Load next page of stocks and fetch their prices
+  Future<void> _loadMore() async {
+    if (_isLoadingMore) return;
+    setState(() => _isLoadingMore = true);
 
     final stocks = _filteredStocks;
-    final scrollOffset = _scrollController.offset;
-    final viewportHeight = _scrollController.position.viewportDimension;
+    final nextEnd = (_visibleCount + _pageSize).clamp(0, stocks.length);
+    // Batch-load prices for the newly visible stocks
+    final newStocks = stocks.sublist(_visibleCount.clamp(0, stocks.length), nextEnd);
+    final symbolsToLoad = newStocks
+        .where((s) => s['hasLiveData'] != true && !_loadedSymbols.contains(s['symbol']))
+        .map((s) => s['symbol'] as String)
+        .toList();
 
-    final firstVisible = (scrollOffset / _itemHeight).floor();
-    final lastVisible = ((scrollOffset + viewportHeight) / _itemHeight).ceil();
-
-    final start = (firstVisible - 5).clamp(0, stocks.length);
-    final end = (lastVisible + 5).clamp(0, stocks.length);
-
-    final symbolsToLoad = <String>[];
-    for (int i = start; i < end; i++) {
-      final s = stocks[i];
-      final symbol = s['symbol'] as String;
-      if (s['hasLiveData'] != true &&
-          !_loadedSymbols.contains(symbol) &&
-          !_loadingSymbols.contains(symbol)) {
-        symbolsToLoad.add(symbol);
-      }
+    // Load in batches of 20 (API limit)
+    for (int i = 0; i < symbolsToLoad.length; i += 20) {
+      final batch = symbolsToLoad.sublist(i, (i + 20).clamp(0, symbolsToLoad.length));
+      await _fetchBatchPrices(batch);
     }
 
-    if (symbolsToLoad.isNotEmpty) {
-      _fetchBatchPrices(symbolsToLoad);
+    if (mounted) {
+      setState(() {
+        _visibleCount = nextEnd;
+        _isLoadingMore = false;
+      });
     }
   }
 
@@ -115,6 +106,7 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
     setState(() {
       _isLoading = true;
       _error = null;
+      _visibleCount = _pageSize;
     });
     try {
       final api = ref.read(apiClientProvider);
@@ -142,8 +134,27 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
     }
     if (mounted) {
       setState(() => _isLoading = false);
-      // Load prices for initially visible stocks
-      WidgetsBinding.instance.addPostFrameCallback((_) => _loadVisiblePrices());
+      // Load prices for the first page of visible stocks
+      _loadInitialPrices();
+    }
+  }
+
+  /// Batch-load prices for the initially visible stocks (first page)
+  Future<void> _loadInitialPrices() async {
+    final stocks = _filteredStocks;
+    final end = _visibleCount.clamp(0, stocks.length);
+    final symbolsToLoad = <String>[];
+    for (int i = 0; i < end; i++) {
+      final s = stocks[i];
+      final symbol = s['symbol'] as String;
+      if (s['hasLiveData'] != true && !_loadedSymbols.contains(symbol)) {
+        symbolsToLoad.add(symbol);
+      }
+    }
+    // Load in batches of 20
+    for (int i = 0; i < symbolsToLoad.length; i += 20) {
+      final batch = symbolsToLoad.sublist(i, (i + 20).clamp(0, symbolsToLoad.length));
+      await _fetchBatchPrices(batch);
     }
   }
 
@@ -239,43 +250,48 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
             child: Row(
               children: [
                 _FilterPill(label: S.of(context).all, isActive: _selectedMarket == 0, onTap: () {
-                  setState(() => _selectedMarket = 0);
+                  setState(() { _selectedMarket = 0; _visibleCount = _pageSize; });
                 }),
                 const SizedBox(width: 8),
                 _FilterPill(label: 'KOSPI', isActive: _selectedMarket == 1, onTap: () {
-                  setState(() => _selectedMarket = 1);
+                  setState(() { _selectedMarket = 1; _visibleCount = _pageSize; });
                 }),
                 const SizedBox(width: 8),
                 _FilterPill(label: 'KOSDAQ', isActive: _selectedMarket == 2, onTap: () {
-                  setState(() => _selectedMarket = 2);
+                  setState(() { _selectedMarket = 2; _visibleCount = _pageSize; });
                 }),
-                const Spacer(),
-                PopupMenuButton<String>(
-                  onSelected: (v) {
-                    setState(() => _sortBy = v);
-                  },
-                  itemBuilder: (_) => [
-                    PopupMenuItem(value: 'change', child: Text(S.of(context).sortChangePercent)),
-                    PopupMenuItem(value: 'volume', child: Text(S.of(context).sortVolume)),
-                    PopupMenuItem(value: 'name', child: Text(S.of(context).sortName)),
-                  ],
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surface,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: colorScheme.outline),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _sortBy == 'change' ? S.of(context).sortChangePercent : _sortBy == 'volume' ? S.of(context).sortVolume : S.of(context).sortName,
-                          style: TextStyle(fontSize: 12, color: colorScheme.secondary),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(Icons.unfold_more, size: 14, color: colorScheme.secondary),
-                      ],
+                const SizedBox(width: 8),
+                Flexible(
+                  child: PopupMenuButton<String>(
+                    onSelected: (v) {
+                      setState(() => _sortBy = v);
+                    },
+                    itemBuilder: (_) => [
+                      PopupMenuItem(value: 'change', child: Text(S.of(context).sortChangePercent)),
+                      PopupMenuItem(value: 'volume', child: Text(S.of(context).sortVolume)),
+                      PopupMenuItem(value: 'name', child: Text(S.of(context).sortName)),
+                    ],
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: colorScheme.outline),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              _sortBy == 'change' ? S.of(context).sortChangePercent : _sortBy == 'volume' ? S.of(context).sortVolume : S.of(context).sortName,
+                              style: TextStyle(fontSize: 12, color: colorScheme.secondary),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.unfold_more, size: 14, color: colorScheme.secondary),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -301,27 +317,63 @@ class _StockListScreenState extends ConsumerState<StockListScreen> {
                             onRefresh: _fetchStocks,
                             color: colorScheme.primary,
                             backgroundColor: colorScheme.surface,
-                            child: ListView.separated(
-                              controller: _scrollController,
-                              itemCount: stocks.length,
-                              separatorBuilder: (_, __) => Divider(
-                                height: 1,
-                                indent: 72,
-                                color: colorScheme.outline.withValues(alpha: 0.5),
-                              ),
-                              itemBuilder: (context, index) {
-                                final s = stocks[index];
-                                return StockCard(
-                                  symbol: s['symbol'] as String,
-                                  nameKo: s['nameKo'] as String,
-                                  nameEn: s['nameEn'] as String,
-                                  exchange: s['exchange'] as String,
-                                  price: (s['price'] as num).toDouble(),
-                                  change: (s['change'] as num).toDouble(),
-                                  changePercent: (s['changePercent'] as num).toDouble(),
-                                );
-                              },
-                            ),
+                            child: () {
+                              final displayCount = _visibleCount.clamp(0, stocks.length);
+                              final hasMore = displayCount < stocks.length;
+                              return ListView.separated(
+                                controller: _scrollController,
+                                itemCount: displayCount + (hasMore ? 1 : 0),
+                                separatorBuilder: (_, index) {
+                                  if (index == displayCount - 1 && hasMore) {
+                                    return const SizedBox.shrink();
+                                  }
+                                  return Divider(
+                                    height: 1,
+                                    indent: 72,
+                                    color: colorScheme.outline.withValues(alpha: 0.5),
+                                  );
+                                },
+                                itemBuilder: (context, index) {
+                                  // "Load More" button at the end
+                                  if (index == displayCount) {
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        height: 44,
+                                        child: OutlinedButton(
+                                          onPressed: _isLoadingMore ? null : _loadMore,
+                                          style: OutlinedButton.styleFrom(
+                                            side: BorderSide(color: colorScheme.primary),
+                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                          ),
+                                          child: _isLoadingMore
+                                              ? SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(strokeWidth: 2, color: colorScheme.primary),
+                                                )
+                                              : Text(
+                                                  S.of(context).loadMore(stocks.length - displayCount),
+                                                  style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w600),
+                                                ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                  final s = stocks[index];
+                                  return StockCard(
+                                    symbol: s['symbol'] as String,
+                                    nameKo: s['nameKo'] as String,
+                                    nameEn: s['nameEn'] as String,
+                                    exchange: s['exchange'] as String,
+                                    price: (s['price'] as num).toDouble(),
+                                    change: (s['change'] as num).toDouble(),
+                                    changePercent: (s['changePercent'] as num).toDouble(),
+                                  );
+                                },
+                              );
+                            }(),
                           ),
           ),
         ],

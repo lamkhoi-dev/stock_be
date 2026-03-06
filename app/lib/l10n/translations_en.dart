@@ -87,6 +87,7 @@ const translationsEn = <String, String>{
   'sortName': 'Sort: Name',
   'failedLoadStocks': 'Failed to load stocks. Please try again.',
   'noStocksFound': 'No stocks found',
+  'loadMore': 'Load More ({count} remaining)',
 
   // Watchlist
   'watchlistEmpty': 'Your watchlist is empty',

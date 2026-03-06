@@ -86,6 +86,7 @@ const translationsVi = <String, String>{
   'sortName': 'SX: Tên',
   'failedLoadStocks': 'Không thể tải cổ phiếu. Vui lòng thử lại.',
   'noStocksFound': 'Không tìm thấy cổ phiếu',
+  'loadMore': 'Xem thêm (còn {count})',
 
   // Watchlist
   'watchlistEmpty': 'Danh sách theo dõi trống',

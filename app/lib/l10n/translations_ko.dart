@@ -86,6 +86,7 @@ const translationsKo = <String, String>{
   'sortName': '정렬: 종목명',
   'failedLoadStocks': '종목 불러오기 실패. 다시 시도해 주세요.',
   'noStocksFound': '종목을 찾을 수 없습니다',
+  'loadMore': '더 보기 ({count}개 남음)',
 
   // Watchlist
   'watchlistEmpty': '관심종목이 비어 있습니다',

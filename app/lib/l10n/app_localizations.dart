@@ -114,6 +114,8 @@ class S {
   String get sortName => _get('sortName');
   String get failedLoadStocks => _get('failedLoadStocks');
   String get noStocksFound => _get('noStocksFound');
+  String loadMore(int remaining) =>
+      _get('loadMore').replaceAll('{count}', '$remaining');
 
   // ─── Watchlist ───────────────────────────────────
   String get watchlistEmpty => _get('watchlistEmpty');

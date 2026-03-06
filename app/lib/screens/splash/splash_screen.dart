@@ -54,7 +54,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   Future<void> _checkAuthAndNavigate() async {
     // Fire a health check in background to pre-warm backend (Render cold start)
     final api = ref.read(apiClientProvider);
-    unawaited(api.healthCheck().catchError((_) {}));
+    // Pre-warm: fire health check + stock list in parallel to wake up backend
+    final warmupFuture = Future.wait([
+      api.healthCheck().catchError((_) {}),
+      api.getStockList(sort: 'change', market: 'all').catchError((_) {}),
+      api.getIndex(code: '0001').catchError((_) {}),
+    ]);
 
     try {
       // Timeout guard — don't let auth check block splash for more than 5s
@@ -66,7 +71,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       // Timeout or error — force-reset loading state and proceed as unauthenticated
       ref.read(authProvider.notifier).forceResetLoading();
     }
-    await Future.delayed(const Duration(milliseconds: 2000));
+
+    // Wait for both animation and warmup to complete (min 2.5s, max 8s for warmup)
+    await Future.wait([
+      warmupFuture.timeout(const Duration(seconds: 8), onTimeout: () => []),
+      Future.delayed(const Duration(milliseconds: 2500)),
+    ]);
     if (!mounted) return;
 
     final authState = ref.read(authProvider);
