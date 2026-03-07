@@ -32,6 +32,7 @@ const watchlistController = {
         for (const item of result) {
           const master = stockMasterService.getStock(item.symbol);
           if (master) {
+            if (master.nameKo) item.name = master.nameKo;
             item.nameEn = master.nameEn || '';
             item.exchange = master.market || item.market || 'KOSPI';
           }

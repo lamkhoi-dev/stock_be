@@ -134,6 +134,7 @@ export const getPrice = async (req, res, next) => {
       const sym = result.data.symbol?.replace(/\.\w+$/, '') || req.params.symbol;
       const master = stockMasterService.getStock(sym);
       if (master) {
+        if (master.nameKo) result.data.name = master.nameKo;
         result.data.englishName = master.nameEn || '';
         result.data.exchange = master.market || result.data.exchange || 'KOSPI';
       }
@@ -308,6 +309,7 @@ export const getFluctuationRanking = async (req, res, next) => {
         for (const stock of result.data) {
           const master = stockMasterService.getStock(stock.symbol);
           if (master) {
+            if (master.nameKo) stock.name = master.nameKo;
             stock.englishName = master.nameEn || '';
             stock.exchange = master.market || 'KOSPI';
           }

@@ -72,7 +72,7 @@ function parseMst(buffer, market, tailLen) {
     const shortCode = part1.substring(0, 9).trim();
     const korName = part1.substring(21).trim();
 
-    if (!/^\d{6}$/.test(shortCode)) continue;
+    if (!/^[A-Z]{0,2}\d{4,6}$/.test(shortCode)) continue;
 
     // Parse sector from fixed-width tail
     const part2 = line.substring(line.length - tailLen);

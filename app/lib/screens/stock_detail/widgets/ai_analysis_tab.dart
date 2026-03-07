@@ -286,6 +286,7 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
     final analysis = _activeAnalysis(aiState)!;
     final sections = analysis.sections;
     final cs = Theme.of(context).colorScheme;
+    final isPro = aiState.proAnalysis != null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -302,9 +303,10 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
         _buildSceScore(analysis.sceScore, cs),
         const SizedBox(height: 16),
 
-        // ── Summary text with typing animation ──
-        if (_displayedText.isNotEmpty ||
-            (sections?.summary ?? '').isNotEmpty)
+        // ── Summary text with typing animation (Pro only) ──
+        if (isPro &&
+            (_displayedText.isNotEmpty ||
+                (sections?.summary ?? '').isNotEmpty))
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(14),
@@ -353,9 +355,9 @@ class _AiAnalysisTabState extends ConsumerState<AiAnalysisTab>
             ),
           ),
 
-        if (_typingDone) ...[
+        // ── 3-Tab detail section (Pro only) ──
+        if (isPro && _typingDone) ...[
           const SizedBox(height: 16),
-          // ── 3-Tab detail section ──
           _buildDetailTabs(sections, cs, s),
         ],
       ],
