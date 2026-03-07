@@ -30,7 +30,7 @@ function norm(s) {
  */
 function scoreMatch(stock, query) {
   const q = norm(query);
-  const code = stock.symbol;
+  const code = stock.symbol.toLowerCase();
   const ko = norm(stock.nameKo);
   const en = norm(stock.nameEn);
   let score = 0;
