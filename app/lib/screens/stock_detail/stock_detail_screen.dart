@@ -132,7 +132,8 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
       );
     }
 
-    if (stockState.error != null && stockState.quote == null) {
+    if (stockState.quote == null) {
+      // Quote failed to load (error or silent failure) — show retry
       return Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -143,7 +144,7 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
         ),
         body: Center(
           child: ErrorRetryWidget(
-            message: S.of(context).failedLoadStock,
+            message: stockState.error ?? S.of(context).failedLoadStock,
             onRetry: () =>
                 ref.read(stockProvider(widget.symbol).notifier).loadStock(widget.symbol),
           ),

@@ -94,17 +94,14 @@ class StockNotifier extends StateNotifier<StockState> {
   Future<void> loadStock(String symbol) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Fetch quote first — this is essential; abort if it fails
+      // Fetch quote — this is the primary data
       final quoteRes = await _api.getQuote(symbol);
-      if (quoteRes.data['success'] != true) {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Failed to load stock data',
-        );
-        return;
+      Quote? quote;
+      Map<String, dynamic>? rawPrice;
+      if (quoteRes.data['success'] == true) {
+        rawPrice = Map<String, dynamic>.from(quoteRes.data['data'] as Map);
+        quote = _mapQuote(rawPrice);
       }
-      final rawPrice = Map<String, dynamic>.from(quoteRes.data['data'] as Map);
-      final quote = _mapQuote(rawPrice);
 
       // Fetch remaining data in parallel — failures are non-fatal
       final results = await Future.wait([
