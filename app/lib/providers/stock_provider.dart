@@ -168,42 +168,40 @@ class StockNotifier extends StateNotifier<StockState> {
       }
 
       // Fetch remaining data in parallel — failures are non-fatal
-      final results = await Future.wait([
-        _api.getHistory(symbol).catchError((_) => _emptyResponse()),
-        _api.getIndicators(symbol).catchError((_) => _emptyResponse()),
-        _api.getStockNews(symbol).catchError((_) => _emptyResponse()),
-      ]);
-
-      final historyRes = results[0];
-      final indicatorsRes = results[1];
-      final newsRes = results[2];
+      final futureHistory = _api.getHistory(symbol).then<dynamic>((r) => r).catchError((_) => null);
+      final futureIndicators = _api.getIndicators(symbol).then<dynamic>((r) => r).catchError((_) => null);
+      final futureNews = _api.getStockNews(symbol).then<dynamic>((r) => r).catchError((_) => null);
+      final results = await Future.wait([futureHistory, futureIndicators, futureNews]);
 
       List<Map<String, dynamic>>? history;
-      if (historyRes.data != null && historyRes.data['success'] == true) {
-        try {
+      try {
+        final historyRes = results[0];
+        if (historyRes != null && historyRes.data != null && historyRes.data['success'] == true) {
           final raw = historyRes.data['data'];
           if (raw is List) {
             history = raw.cast<Map<String, dynamic>>();
           }
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
 
       TechnicalSummary? indicators;
-      if (indicatorsRes.data != null && indicatorsRes.data['success'] == true) {
-        try {
+      try {
+        final indicatorsRes = results[1];
+        if (indicatorsRes != null && indicatorsRes.data != null && indicatorsRes.data['success'] == true) {
           indicators = _mapIndicators(
               indicatorsRes.data['data'] as Map<String, dynamic>);
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
 
       List<Map<String, dynamic>> news = [];
-      if (newsRes.data != null && newsRes.data['success'] == true) {
-        try {
+      try {
+        final newsRes = results[2];
+        if (newsRes != null && newsRes.data != null && newsRes.data['success'] == true) {
           news = (newsRes.data['data'] as List)
               .map((n) => _mapNewsItem(n as Map<String, dynamic>))
               .toList();
-        } catch (_) {}
-      }
+        }
+      } catch (_) {}
 
       // Set ALL data at once — loading complete, UI transitions cleanly
       state = state.copyWith(
@@ -217,11 +215,6 @@ class StockNotifier extends StateNotifier<StockState> {
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
-  }
-
-  /// Create a dummy Response for failed non-critical requests.
-  dynamic _emptyResponse() {
-    return _FakeResponse();
   }
 
   /// Refresh just the quote (for real-time updates).
@@ -328,8 +321,3 @@ final stockHistoryProvider =
   }
   return [];
 });
-
-/// Fake response for non-critical API calls that failed.
-class _FakeResponse {
-  dynamic get data => null;
-}
