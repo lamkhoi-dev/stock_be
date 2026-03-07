@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:logger/logger.dart' as app_logger;
@@ -33,12 +34,14 @@ final dioProvider = Provider<Dio>((ref) {
   // 2. Refresh Interceptor — auto refresh on 401
   dio.interceptors.add(RefreshInterceptor(dio, storage));
 
-  // 3. Log Interceptor — debug mode logging
-  dio.interceptors.add(LogInterceptor(
-    requestBody: true,
-    responseBody: true,
-    logPrint: (obj) => _logger.d(obj.toString()),
-  ));
+  // 3. Log Interceptor — debug mode only
+  if (kDebugMode) {
+    dio.interceptors.add(LogInterceptor(
+      requestBody: true,
+      responseBody: true,
+      logPrint: (obj) => _logger.d(obj.toString()),
+    ));
+  }
 
   return dio;
 });
