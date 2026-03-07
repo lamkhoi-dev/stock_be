@@ -77,33 +77,71 @@ export const healthYahoo = async (req, res, next) => {
 /**
  * GET /api/stocks/price/:symbol
  * Current price with full details (KIS primary → Yahoo fallback)
+ * Enriched with englishName/exchange from stock master data.
  */
-export const getPrice = withFallback(
-  async (req) => kisService.getPrice(req.params.symbol),
-  async (req) => {
-    const sym = req.params.symbol;
-    const yahoo = await yahooService.getQuote(sym.includes('.') ? sym : `${sym}.KS`);
-    // Normalize Yahoo response to match KIS structure
-    const d = yahoo.data;
-    return {
-      data: {
-        symbol: sym,
-        name: d.shortName || d.longName || sym,
-        price: d.regularMarketPrice || 0,
-        change: Math.round((d.regularMarketChange || 0) * 100) / 100,
-        changePct: Math.round((d.regularMarketChangePercent || 0) * 100) / 100,
-        open: d.regularMarketOpen || 0,
-        high: d.regularMarketDayHigh || 0,
-        low: d.regularMarketDayLow || 0,
-        prevClose: d.regularMarketPreviousClose || 0,
-        volume: d.regularMarketVolume || 0,
-        high52w: d.fiftyTwoWeekHigh || 0,
-        low52w: d.fiftyTwoWeekLow || 0,
-      },
-      cached: yahoo.cached,
-    };
-  },
-);
+export const getPrice = async (req, res, next) => {
+  let result;
+  let source = 'kis';
+
+  // Try KIS (with 1 retry for transient errors)
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      result = await kisService.getPrice(req.params.symbol);
+      break;
+    } catch (kisErr) {
+      const isTransient = kisErr.message?.includes('token') ||
+        kisErr.message?.includes('timeout') ||
+        kisErr.message?.includes('ECONNRESET') ||
+        kisErr.code === 'ECONNABORTED';
+      if (attempt === 0 && isTransient) {
+        await new Promise(r => setTimeout(r, 500));
+        continue;
+      }
+      // Fallback to Yahoo
+      try {
+        const sym = req.params.symbol;
+        const yahoo = await yahooService.getQuote(sym.includes('.') ? sym : `${sym}.KS`);
+        const d = yahoo.data;
+        result = {
+          data: {
+            symbol: sym,
+            name: d.shortName || d.longName || sym,
+            price: d.regularMarketPrice || 0,
+            change: Math.round((d.regularMarketChange || 0) * 100) / 100,
+            changePct: Math.round((d.regularMarketChangePercent || 0) * 100) / 100,
+            open: d.regularMarketOpen || 0,
+            high: d.regularMarketDayHigh || 0,
+            low: d.regularMarketDayLow || 0,
+            prevClose: d.regularMarketPreviousClose || 0,
+            volume: d.regularMarketVolume || 0,
+            high52w: d.fiftyTwoWeekHigh || 0,
+            low52w: d.fiftyTwoWeekLow || 0,
+          },
+          cached: yahoo.cached,
+        };
+        source = 'yahoo';
+        break;
+      } catch (yahooErr) {
+        return next(kisErr);
+      }
+    }
+  }
+
+  // Enrich with englishName and exchange from stock master data
+  if (result?.data) {
+    try {
+      if (!stockMasterService.isReady()) await stockMasterService.init();
+      const sym = result.data.symbol?.replace(/\.\w+$/, '') || req.params.symbol;
+      const master = stockMasterService.getStock(sym);
+      if (master) {
+        result.data.englishName = master.nameEn || '';
+        result.data.exchange = master.market || result.data.exchange || 'KOSPI';
+      }
+    } catch (_) { /* non-critical */ }
+  }
+
+  res.json({ success: true, ...result, source });
+};
 
 // ═══════════════════════════════════════════════════════
 //  CHART DATA
@@ -258,10 +296,24 @@ export const getStockList = async (req, res, next) => {
 /**
  * GET /api/stocks/ranking/fluctuation
  * Top gainers/losers — Query: type (0=all, 1=up, 3=down)
+ * Enriched with englishName/exchange from stock master data.
  */
 export const getFluctuationRanking = async (req, res, next) => {
   try {
     const result = await kisService.getFluctuationRanking(req.query.type || '0');
+    // Enrich with englishName from master data
+    if (result.data && Array.isArray(result.data)) {
+      try {
+        if (!stockMasterService.isReady()) await stockMasterService.init();
+        for (const stock of result.data) {
+          const master = stockMasterService.getStock(stock.symbol);
+          if (master) {
+            stock.englishName = master.nameEn || '';
+            stock.exchange = master.market || 'KOSPI';
+          }
+        }
+      } catch (_) { /* non-critical */ }
+    }
     res.json({ success: true, ...result, source: 'kis' });
   } catch (err) {
     next(err);

@@ -331,8 +331,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           return <String, dynamic>{
             'symbol': item['symbol'] ?? '',
             'nameKo': item['nameKo'] ?? item['name'] ?? '',
-            'nameEn': item['nameEn'] ?? item['name'] ?? '',
-            'exchange': item['market'] ?? item['exchange'] ?? 'KOSPI',
+            'nameEn': item['nameEn'] ?? item['englishName'] ?? '',
+            'exchange': item['exchange'] ?? item['market'] ?? 'KOSPI',
             'price': (item['currentPrice'] as num?)?.toDouble() ?? 0.0,
             'change': (item['change'] as num?)?.toDouble() ?? 0.0,
             'changePercent': (item['changePct'] as num?)?.toDouble() ??

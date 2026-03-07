@@ -6,6 +6,7 @@
 import Watchlist from '../models/Watchlist.js';
 import User from '../models/User.js';
 import kisService from '../services/kis.service.js';
+import stockMasterService from '../services/stock-master.service.js';
 import { ApiError } from '../middleware/errorHandler.js';
 import { stripSymbolSuffix } from '../utils/helpers.js';
 import logger from '../utils/logger.js';
@@ -24,6 +25,18 @@ const watchlistController = {
       const withPrice = req.query.withPrice === 'true';
 
       let result = items.map(item => item.toJSON());
+
+      // Enrich with englishName from stock master data
+      try {
+        if (!stockMasterService.isReady()) await stockMasterService.init();
+        for (const item of result) {
+          const master = stockMasterService.getStock(item.symbol);
+          if (master) {
+            item.nameEn = master.nameEn || '';
+            item.exchange = master.market || item.market || 'KOSPI';
+          }
+        }
+      } catch (_) { /* non-critical */ }
 
       // Optionally enrich with live price data
       if (withPrice && result.length > 0) {

@@ -69,7 +69,7 @@ class StockCard extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          nameKo.isNotEmpty ? nameEn : symbol,
+                          nameEn.isNotEmpty ? '$nameEn · $symbol' : symbol,
                           style: TextStyle(
                             fontSize: 12,
                             color: colorScheme.secondary,
