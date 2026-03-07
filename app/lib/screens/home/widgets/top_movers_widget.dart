@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../config/theme.dart';
 import '../../../widgets/common/company_icon.dart';
+import '../../../widgets/common/exchange_badge.dart';
 import '../../../widgets/common/price_text.dart';
 import '../../../widgets/common/shimmer_loading.dart';
 
@@ -107,6 +108,8 @@ class _TopMoversWidgetState extends State<TopMoversWidget> {
                 rank: index + 1,
                 symbol: item['symbol'] as String? ?? '',
                 name: item['name'] as String? ?? '',
+                englishName: item['englishName'] as String? ?? '',
+                exchange: item['exchange'] as String? ?? 'KOSPI',
                 price: (item['price'] as num?)?.toDouble() ?? 0,
                 change: (item['change'] as num?)?.toDouble() ?? 0,
                 changePercent: (item['changePercent'] as num?)?.toDouble() ?? 0,
@@ -161,6 +164,8 @@ class _MoverItem extends StatelessWidget {
     required this.rank,
     required this.symbol,
     required this.name,
+    required this.englishName,
+    required this.exchange,
     required this.price,
     required this.change,
     required this.changePercent,
@@ -169,6 +174,8 @@ class _MoverItem extends StatelessWidget {
   final int rank;
   final String symbol;
   final String name;
+  final String englishName;
+  final String exchange;
   final double price;
   final double change;
   final double changePercent;
@@ -209,9 +216,19 @@ class _MoverItem extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    symbol,
-                    style: TextStyle(fontSize: 11, color: colorScheme.secondary),
+                  Row(
+                    children: [
+                      ExchangeBadge(exchange: exchange),
+                      const SizedBox(width: 4),
+                      Flexible(
+                        child: Text(
+                          englishName.isNotEmpty ? '$englishName · $symbol' : symbol,
+                          style: TextStyle(fontSize: 11, color: colorScheme.secondary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

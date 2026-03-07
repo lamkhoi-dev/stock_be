@@ -252,10 +252,16 @@ class _WatchlistScreenState extends ConsumerState<WatchlistScreen> {
                             if (item.exchange != null && item.exchange!.isNotEmpty)
                               ExchangeBadge(exchange: item.exchange!, small: true),
                             if (item.exchange != null && item.exchange!.isNotEmpty)
-                              const SizedBox(width: 6),
-                            Text(
-                              item.symbol,
-                              style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.38)),
+                              const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                item.englishName != null && item.englishName!.isNotEmpty
+                                    ? '${item.englishName} · ${item.symbol}'
+                                    : item.symbol,
+                                style: TextStyle(fontSize: 11, color: colorScheme.onSurface.withValues(alpha: 0.5)),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           ],
                         ),

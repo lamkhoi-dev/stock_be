@@ -363,6 +363,27 @@ class _StockDetailScreenState extends ConsumerState<StockDetailScreen>
                               const SizedBox(height: 1),
                               Row(
                                 children: [
+                                  if (nameEn.isNotEmpty && nameKo.isNotEmpty) ...[
+                                    Flexible(
+                                      child: Text(
+                                        nameEn,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: colorScheme.secondary,
+                                        ),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '·',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: colorScheme.secondary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                  ],
                                   Text(
                                     formatKRW(price),
                                     style: TextStyle(

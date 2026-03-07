@@ -209,7 +209,16 @@ class _WatchlistItem extends StatelessWidget {
                     children: [
                       ExchangeBadge(exchange: exchange, small: true),
                       const SizedBox(width: 4),
-                      Text(symbol, style: TextStyle(fontSize: 11, color: colorScheme.secondary)),
+                      Flexible(
+                        child: Text(
+                          nameKo.isNotEmpty && nameEn.isNotEmpty
+                              ? '$nameEn · $symbol'
+                              : symbol,
+                          style: TextStyle(fontSize: 11, color: colorScheme.secondary),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
                     ],
                   ),
                 ],

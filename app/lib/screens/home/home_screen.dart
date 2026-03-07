@@ -237,6 +237,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return <String, dynamic>{
               'symbol': item['symbol'] ?? item['code'] ?? '',
               'name': item['name'] ?? item['hts_kor_isnm'] ?? '',
+              'englishName': item['englishName'] ?? '',
+              'exchange': item['exchange'] ?? 'KOSPI',
               'price': (item['price'] as num?)?.toDouble() ??
                   (item['stck_prpr'] as num?)?.toDouble() ?? 0.0,
               'change': (item['change'] as num?)?.toDouble() ??
@@ -260,6 +262,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             return <String, dynamic>{
               'symbol': item['symbol'] ?? item['code'] ?? '',
               'name': item['name'] ?? item['hts_kor_isnm'] ?? '',
+              'englishName': item['englishName'] ?? '',
+              'exchange': item['exchange'] ?? 'KOSPI',
               'price': (item['price'] as num?)?.toDouble() ??
                   (item['stck_prpr'] as num?)?.toDouble() ?? 0.0,
               'change': (item['change'] as num?)?.toDouble() ??
