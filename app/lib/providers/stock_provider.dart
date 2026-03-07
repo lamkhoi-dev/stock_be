@@ -89,24 +89,22 @@ class StockNotifier extends StateNotifier<StockState> {
   final ApiClient _api;
 
   /// Load all data for a stock symbol.
+  /// Keeps isLoading=true until ALL data (quote, history, indicators, news)
+  /// is fetched so the UI never flashes empty states.
   Future<void> loadStock(String symbol) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Fetch quote first — this is essential
+      // Fetch quote first — this is essential; abort if it fails
       final quoteRes = await _api.getQuote(symbol);
-      Quote? quote;
-      Map<String, dynamic>? rawPrice;
-      if (quoteRes.data['success'] == true) {
-        rawPrice = Map<String, dynamic>.from(quoteRes.data['data'] as Map);
-        quote = _mapQuote(rawPrice);
+      if (quoteRes.data['success'] != true) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to load stock data',
+        );
+        return;
       }
-
-      // Show the quote immediately, then load the rest in the background
-      state = state.copyWith(
-        quote: quote,
-        rawPrice: rawPrice,
-        isLoading: false,
-      );
+      final rawPrice = Map<String, dynamic>.from(quoteRes.data['data'] as Map);
+      final quote = _mapQuote(rawPrice);
 
       // Fetch remaining data in parallel — failures are non-fatal
       final results = await Future.wait([
@@ -140,10 +138,14 @@ class StockNotifier extends StateNotifier<StockState> {
             .toList();
       }
 
+      // Set ALL data at once — loading complete, UI transitions cleanly
       state = state.copyWith(
+        quote: quote,
+        rawPrice: rawPrice,
         history: history,
         indicators: indicators,
         news: news,
+        isLoading: false,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
