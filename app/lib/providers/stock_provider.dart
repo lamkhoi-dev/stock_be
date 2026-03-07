@@ -83,6 +83,70 @@ Map<String, dynamic> _mapNewsItem(Map<String, dynamic> n) {
   };
 }
 
+/// Map backend indicator response → TechnicalSummary model.
+/// Backend format: { symbol, summary: { signal, score, ... }, rsi: {...}, macd: {...}, ... }
+TechnicalSummary _mapIndicators(Map<String, dynamic> d) {
+  final summary = d['summary'] as Map<String, dynamic>? ?? {};
+  final indicators = <IndicatorResult>[];
+
+  // RSI
+  final rsi = d['rsi'] as Map<String, dynamic>?;
+  if (rsi != null) {
+    indicators.add(IndicatorResult(
+      name: 'RSI',
+      signal: rsi['signal'] as String? ?? 'NEUTRAL',
+      values: {'value': rsi['value'], 'period': rsi['period']},
+    ));
+  }
+
+  // MACD
+  final macd = d['macd'] as Map<String, dynamic>?;
+  if (macd != null) {
+    indicators.add(IndicatorResult(
+      name: 'MACD',
+      signal: macd['trend'] as String? ?? 'NEUTRAL',
+      values: {'macd': macd['macd'], 'signal': macd['signal'], 'histogram': macd['histogram']},
+    ));
+  }
+
+  // Stochastic
+  final stoch = d['stochastic'] as Map<String, dynamic>?;
+  if (stoch != null) {
+    indicators.add(IndicatorResult(
+      name: 'Stochastic',
+      signal: stoch['signal'] as String? ?? 'NEUTRAL',
+      values: {'k': stoch['k'], 'd': stoch['d']},
+    ));
+  }
+
+  // ATR
+  final atr = d['atr'] as Map<String, dynamic>?;
+  if (atr != null) {
+    indicators.add(IndicatorResult(
+      name: 'ATR',
+      signal: 'NEUTRAL',
+      values: {'value': atr['value'], 'pct': atr['pct']},
+    ));
+  }
+
+  // Moving Averages
+  final ma = d['movingAverages'] as Map<String, dynamic>?;
+  if (ma != null) {
+    indicators.add(IndicatorResult(
+      name: 'SMA',
+      signal: ma['trend'] as String? ?? 'NEUTRAL',
+      values: {'sma20': ma['sma20'], 'sma50': ma['sma50'], 'sma200': ma['sma200']},
+    ));
+  }
+
+  return TechnicalSummary(
+    symbol: d['symbol'] as String? ?? '',
+    overallSignal: summary['signal'] as String? ?? 'HOLD',
+    score: ((summary['score'] as num?)?.toDouble() ?? 0) * 100, // backend sends -1..1, model expects -100..100
+    indicators: indicators,
+  );
+}
+
 /// Stock detail notifier — fetches all data for a single stock.
 class StockNotifier extends StateNotifier<StockState> {
   StockNotifier(this._api) : super(const StockState());
@@ -116,23 +180,29 @@ class StockNotifier extends StateNotifier<StockState> {
 
       List<Map<String, dynamic>>? history;
       if (historyRes.data != null && historyRes.data['success'] == true) {
-        final raw = historyRes.data['data'];
-        if (raw is List) {
-          history = raw.cast<Map<String, dynamic>>();
-        }
+        try {
+          final raw = historyRes.data['data'];
+          if (raw is List) {
+            history = raw.cast<Map<String, dynamic>>();
+          }
+        } catch (_) {}
       }
 
       TechnicalSummary? indicators;
       if (indicatorsRes.data != null && indicatorsRes.data['success'] == true) {
-        indicators = TechnicalSummary.fromJson(
-            indicatorsRes.data['data'] as Map<String, dynamic>);
+        try {
+          indicators = _mapIndicators(
+              indicatorsRes.data['data'] as Map<String, dynamic>);
+        } catch (_) {}
       }
 
       List<Map<String, dynamic>> news = [];
       if (newsRes.data != null && newsRes.data['success'] == true) {
-        news = (newsRes.data['data'] as List)
-            .map((n) => _mapNewsItem(n as Map<String, dynamic>))
-            .toList();
+        try {
+          news = (newsRes.data['data'] as List)
+              .map((n) => _mapNewsItem(n as Map<String, dynamic>))
+              .toList();
+        } catch (_) {}
       }
 
       // Set ALL data at once — loading complete, UI transitions cleanly
