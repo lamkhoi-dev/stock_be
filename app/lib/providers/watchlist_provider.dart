@@ -39,8 +39,8 @@ class WatchlistNotifier extends StateNotifier<WatchlistState> {
     return WatchlistItem(
       id: (w['_id'] ?? w['id'] ?? w['symbol'] ?? '').toString(),
       symbol: (w['symbol'] ?? '').toString(),
-      name: (w['nameKo'] ?? w['name'] ?? '').toString(),
-      englishName: (w['nameEn'] ?? w['englishName'] ?? '').toString(),
+      name: (w['nameKo']?.toString().isNotEmpty == true ? w['nameKo'] : w['name'] ?? '').toString(),
+      englishName: (w['nameEn']?.toString().isNotEmpty == true ? w['nameEn'] : w['englishName'] ?? '').toString(),
       exchange: (w['exchange'] ?? w['market'] ?? '').toString(),
       order: (w['order'] as num?)?.toInt() ?? 0,
       addedAt: w['addedAt'] != null ? DateTime.tryParse(w['addedAt'].toString()) : null,
